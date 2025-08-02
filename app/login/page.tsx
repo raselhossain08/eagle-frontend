@@ -43,8 +43,10 @@ const handleApiCall = async (
 
   try {
     const response = await axios.post(`${API_BASE_URL}${endpoint}`, data, {
-      withCredentials: true,
       timeout: 10000, // 10 second timeout
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
 
     const { token, user } = response.data;
@@ -91,7 +93,7 @@ const handleApiCall = async (
           throw new Error("Account access is restricted");
         case 409:
           throw new Error(
-            serverMessage || "Account already exists with this email"
+            "Email already registered. Please use the login tab instead."
           );
         case 429:
           throw new Error("Too many attempts - please try again later");
@@ -142,6 +144,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"login" | "register">("register");
   const router = useRouter();
   const { login } = useAuth();
 
@@ -223,7 +226,25 @@ export default function LoginPage() {
       toast.dismiss();
       const errorMessage = (error as Error).message;
       console.error("Registration error:", errorMessage);
-      toast.error(errorMessage);
+
+      // If user already exists, suggest login and switch tabs
+      if (
+        errorMessage.includes("Account already exists") ||
+        errorMessage.includes("409")
+      ) {
+        toast.error(
+          "Account already exists with this email. Please login instead.",
+          {
+            duration: 4000,
+          }
+        );
+        // Auto-switch to login tab after a short delay
+        setTimeout(() => {
+          setActiveTab("login");
+        }, 2000);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -235,7 +256,13 @@ export default function LoginPage() {
 
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-md mx-auto">
-          <Tabs defaultValue="register" className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) =>
+              setActiveTab(value as "login" | "register")
+            }
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2 bg-slate-800 border border-slate-700">
               <TabsTrigger
                 value="login"
@@ -316,6 +343,16 @@ export default function LoginPage() {
                       )}
                     </Button>
                   </form>
+                  <p className="text-center text-sm text-gray-400 mt-4">
+                    Don't have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("register")}
+                      className="text-cyan-400 hover:underline cursor-pointer"
+                    >
+                      Register here
+                    </button>
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -420,6 +457,16 @@ export default function LoginPage() {
                     </Button>
                   </form>
                   <p className="text-center text-sm text-gray-400 mt-4">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("login")}
+                      className="text-cyan-400 hover:underline cursor-pointer"
+                    >
+                      Login here
+                    </button>
+                  </p>
+                  <p className="text-center text-sm text-gray-400 mt-2">
                     By signing up, you agree to our{" "}
                     <Link
                       href="/disclosures/terms-conditions"
