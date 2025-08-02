@@ -45,8 +45,8 @@ const handleApiCall = async (
     const response = await axios.post(`${API_BASE_URL}${endpoint}`, data, {
       timeout: 10000, // 10 second timeout
       headers: {
-        'Content-Type': 'application/json',
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     const { token, user } = response.data;

@@ -373,8 +373,8 @@ export function MentorshipPackages() {
 
   return (
     <section className="py-20 bg-slate-900">
-      {/* Shopping Cart Button */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Shopping Cart Button - Hidden */}
+      <div className="fixed top-4 right-4 z-50 hidden">
         <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
           <DialogTrigger asChild>
             <Button className="relative bg-cyan-600 hover:bg-cyan-700 text-white rounded-full p-4 shadow-lg">
