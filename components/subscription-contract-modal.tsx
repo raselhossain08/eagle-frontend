@@ -21,9 +21,9 @@ import {
   getUserContracts,
   type SignedContractData,
 } from "@/lib/api/contracts";
-import DiamondContract from "@/components/contarcts/DiamondContract";
-import InfinityContract from "@/components/contarcts/InfinityContract";
-import BasicContract from "@/components/contarcts/BasicContract";
+import DiamondContract from "@/components/contracts/DiamondContract";
+import InfinityContract from "@/components/contracts/InfinityContract";
+import BasicContract from "@/components/contracts/BasicContract";
 import SignatureCanvas from "@/components/signature-canvas";
 
 interface SubscriptionContractModalProps {

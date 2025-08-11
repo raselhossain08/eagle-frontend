@@ -273,7 +273,7 @@ export default function AssetManagementPage() {
 
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Eagle Guardian Column */}
-                <Card className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-500/50">
+                <Card className="bg-transparent rounded-lg border text-card-foreground shadow-sm bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-500/50">
                   <CardHeader className="text-center pb-6">
                     <div className="flex items-center justify-center mb-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-3">

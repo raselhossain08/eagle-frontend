@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -29,6 +31,7 @@ import {
   Play,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import {
   DiamondUpgradeButton,
@@ -36,6 +39,7 @@ import {
 } from "@/components/upgrade-button";
 
 export default function TechnologyPage() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -188,7 +192,25 @@ export default function TechnologyPage() {
                   </ul>
 
                   <div className="pt-4 space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                    <Button 
+                      onClick={() => {
+                        // Create cart item from the package
+                        const cartItem = {
+                          id: 'quantitative-trading-script',
+                          name: 'Quantitative Trading Script',
+                          price: '47',
+                          description: 'Powerful algorithmic trading script with advanced features',
+                          type: "script-purchase"
+                        };
+                        
+                        // Save to localStorage
+                        localStorage.setItem('cart', JSON.stringify([cartItem]));
+                        
+                        // Navigate to checkout using Next.js router
+                        router.push('/checkout');
+                      }}
+                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                    >
                       Add to Basket - $47/month
                     </Button>
                     <div className="text-center">

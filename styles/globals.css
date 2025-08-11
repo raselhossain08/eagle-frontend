@@ -92,3 +92,16 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.unique-green-card {
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 1px solid rgba(34, 197, 94, 0.5); /* border-green-500/50 */
+  color: hsl(var(--card-foreground)); /* text-card-foreground */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  background: linear-gradient(
+    to bottom right,
+    rgba(20, 83, 45, 0.3), /* green-900/30 */
+    rgba(6, 78, 59, 0.3)   /* emerald-900/30 */
+  );
+}
+

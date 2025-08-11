@@ -106,3 +106,16 @@ export interface UserProfile {
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
 }
+
+export interface ContractData {
+  name: string;
+  email: string;
+  signature: string;
+  productType: string;
+  pdfPath: string;
+  subscriptionType: "monthly" | "annual";
+  amount: string;
+  isDiamondContract: boolean;
+  contractDate: string;
+  productName: string;
+}
