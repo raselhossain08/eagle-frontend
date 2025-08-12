@@ -18,7 +18,7 @@ export const ScriptContract: React.FC<ScriptContractProps> = ({
   email,
 }) => {
   return (
-    <div className="contract-container text-slate-300 text-sm space-y-4">
+    <div className="contract-container  text-sm space-y-4">
       <h1 className="text-2xl font-bold text-center mb-6">Advisory Contract</h1>
       
       <p className="indent">
@@ -55,7 +55,7 @@ export const ScriptContract: React.FC<ScriptContractProps> = ({
           Subscription Fee: $47/month (recurring)
         </p>
         <p className="indent mt-2">
-          The subscription is billed monthly via Stripe or PayPal through <a href="https://eagle-investors.com" className="underline text-blue-600">https://eagle-investors.com</a>
+          The subscription is billed monthly via Stripe or PayPal through <a href={process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com"} className="underline text-blue-600">{process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com"}</a>
         </p>
         <p className="indent mt-2">
           The subscription is standalone and not bundled with any other Eagle Investors service, including but not limited to Diamond, Infinity, or mentorship products.
@@ -65,7 +65,7 @@ export const ScriptContract: React.FC<ScriptContractProps> = ({
       <div className="border-b border-slate-600 pb-4">
         <h2 className="section-title font-medium mb-2">4. Acceptance of Disclosures</h2>
         <p className="indent">
-          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, options and leverage trading risks, impersonal investment advice, individual financial guidance, advisor positions, paper or simulated trades, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href="https://eagle-investors.com/disclaimer" className="underline text-blue-600">https://eagle-investors.com/disclaimer</a>
+          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, options and leverage trading risks, impersonal investment advice, individual financial guidance, advisor positions, paper or simulated trades, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href={process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"} className="underline text-blue-600">{process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"}</a>
         </p>
       </div>
 

@@ -443,11 +443,13 @@ export default function CheckoutContent() {
       
       // Try to generate PDF first if needed
       let pdfPath = `contracts/${productType}-${signatureData.customerEmail}-${Date.now()}.pdf`;
+      let cloudinaryUrl = "";
       
       // Always try to generate a PDF regardless of contract type
       try {
         const pdfResult = await generateContractPDF(pdfData);
         pdfPath = pdfResult.pdfPath;
+        cloudinaryUrl = pdfResult.cloudinaryUrl || pdfResult.pdfUrl;
       } catch (pdfError) {
         console.error("PDF generation error:", pdfError);
         // Continue with default path if PDF generation fails
@@ -459,10 +461,10 @@ export default function CheckoutContent() {
         signature: signatureData.signature,
         productType,
         pdfPath,
+        pdfUrl: cloudinaryUrl, // Add the Cloudinary URL
         subscriptionType: "monthly" as const,
-        amount: getTotalPrice(useMemberPrice).toLocaleString(),
-        isDiamondContract: isDiamond,
-        isInfinityContract: isInfinity,
+        amount: getTotalPrice(useMemberPrice), // Remove toLocaleString() to keep as number
+        isDiamondContract: isDiamond ? true : undefined,
         contractDate: formattedDate,
         productName: cartItems[0]?.name || "Mentorship Package",
       };
@@ -476,9 +478,11 @@ export default function CheckoutContent() {
       // Check if this was an existing contract
       if (signedContract.isExisting) {
         toast({
-          title: "Existing Contract Found",
+          title: "Contract Ready",
           description:
-            "Using your existing contract for this product. Proceeding to payment.",
+            signedContract.status === "payment_pending"
+              ? "Your contract is signed and ready for payment."
+              : "Using your existing contract for this package. Proceeding to payment.",
         });
       } else {
         toast({
@@ -505,18 +509,24 @@ export default function CheckoutContent() {
         return;
       }
 
-      // Handle legacy error response for existing contracts
-      if (error.existingContract) {
-        // Contract already exists, use existing contract
-        setContractId(error.existingContract._id);
+      // Handle legacy error response for existing contracts or signed contracts with pending payment
+      if (error.existingContract || 
+          error.message === "Contract already exists for this product" ||
+          error.message === "Contract signed but payment pending") {
+        
+        // Contract exists and is ready for payment, no error to show
+        if (error.existingContract) {
+          setContractId(error.existingContract._id);
+        }
+        
         setCurrentStep(4); // Move to Payment step (index 4 in the new flow)
 
         toast({
-          title: "Existing Contract Found",
-          description:
-            "Using your existing contract for this product. Proceeding to payment.",
+          title: "Contract Ready",
+          description: "Your contract is ready for payment. Proceeding to checkout.",
         });
       } else {
+        // Show error only for actual failures, not for existing contracts
         toast({
           title: "Contract Signing Failed",
           description: error.message || "Failed to sign contract",

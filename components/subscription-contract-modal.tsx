@@ -21,6 +21,7 @@ import {
   getUserContracts,
   type SignedContractData,
 } from "@/lib/api/contracts";
+import { getContractPDFUrl, downloadContractPDF, hasValidPDFUrl } from "@/lib/utils/pdf-utils";
 import DiamondContract from "@/components/contracts/DiamondContract";
 import InfinityContract from "@/components/contracts/InfinityContract";
 import BasicContract from "@/components/contracts/BasicContract";
@@ -118,12 +119,10 @@ export function SubscriptionContractModal({
           // Use the existing contract
           setContractId(existingContract._id);
 
-          // Set PDF URL if available
-          if (existingContract.pdfPath) {
-            const baseUrl =
-              process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-              "http://localhost:5000";
-            setPdfUrl(`${baseUrl}${existingContract.pdfPath}`);
+          // Set PDF URL using utility function
+          const pdfInfo = getContractPDFUrl(existingContract);
+          if (pdfInfo.url) {
+            setPdfUrl(pdfInfo.url);
           }
 
           // Fill in the signature data with existing contract info
@@ -133,15 +132,15 @@ export function SubscriptionContractModal({
             signature: existingContract.signature,
           });
 
-          // Skip directly to payment if contract is pending
-          if (existingContract.status === "payment_pending") {
-            setStep("payment");
-            toast({
-              title: "Existing Contract Found",
-              description:
-                "You already have a signed contract for this package. Proceeding to payment.",
-            });
-          }
+          // Always skip directly to payment if contract exists (signed or payment_pending)
+          setStep("payment");
+          toast({
+            title: "Contract Ready",
+            description:
+              existingContract.status === "payment_pending" 
+                ? "Your contract is signed and ready for payment."
+                : "Using your existing contract for this package. Proceeding to payment.",
+          });
         }
       } catch (error) {
         console.error("Error checking existing contracts:", error);
@@ -190,7 +189,13 @@ export function SubscriptionContractModal({
 
       const result = await signContract(signedContractData);
       setContractId(result._id);
-      setPdfUrl(pdfResponse.pdfUrl);
+      
+      // Set PDF URL (prioritize Cloudinary URL over legacy pdfUrl)
+      if (pdfResponse.cloudinaryUrl) {
+        setPdfUrl(pdfResponse.cloudinaryUrl);
+      } else if (pdfResponse.pdfUrl) {
+        setPdfUrl(pdfResponse.pdfUrl);
+      }
 
       if (result.isExisting) {
         toast({
@@ -219,12 +224,10 @@ export function SubscriptionContractModal({
         // Use the existing contract
         setContractId(existingContract._id);
 
-        // Set PDF URL if available
-        if (existingContract.pdfPath) {
-          const baseUrl =
-            process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-            "http://localhost:5000";
-          setPdfUrl(`${baseUrl}${existingContract.pdfPath}`);
+        // Set PDF URL using utility function
+        const pdfInfo = getContractPDFUrl(existingContract);
+        if (pdfInfo.url) {
+          setPdfUrl(pdfInfo.url);
         }
 
         // Fill in the signature data with existing contract info
@@ -234,12 +237,27 @@ export function SubscriptionContractModal({
           signature: existingContract.signature || signatureData.signature,
         });
 
+        // Always proceed to payment for existing contracts, no error message
         toast({
-          title: "Existing Contract Found",
+          title: "Contract Ready",
           description:
-            "You already have a signed contract for this package. Proceeding to payment.",
+            "Using your existing contract for this package. Proceeding to payment.",
         });
 
+        setStep("payment");
+        return;
+      }
+
+      // Handle signed contract with pending payment - no error, just proceed to payment
+      if (
+        error.message === "Contract already exists for this product" ||
+        error.message === "Contract signed but payment pending"
+      ) {
+        // If we reach here, the contract exists and is signed, just proceed to payment
+        toast({
+          title: "Contract Ready",
+          description: "Your contract is ready. Please complete the payment.",
+        });
         setStep("payment");
         return;
       }
@@ -282,6 +300,13 @@ export function SubscriptionContractModal({
     // since we handle signing separately in the modal
     const contractProps = {
       isModal: true,
+      customerName: signatureData.name || "Customer",
+      contractDate: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      price: currentPrice.toString(),
     };
 
     switch (packageType) {
@@ -508,11 +533,27 @@ export function SubscriptionContractModal({
             </p>
             {pdfUrl && (
               <div className="pt-4">
-                <Button asChild variant="outline">
-                  <a href={pdfUrl} download>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Contract Copy
-                  </a>
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      await downloadContractPDF({ 
+                        cloudinaryUrl: pdfUrl.includes('cloudinary') ? pdfUrl : undefined,
+                        pdfUrl: pdfUrl.includes('cloudinary') ? undefined : pdfUrl,
+                        _id: contractId,
+                        productType: packageType 
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to download contract",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Contract Copy
                 </Button>
               </div>
             )}

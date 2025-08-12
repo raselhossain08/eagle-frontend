@@ -18,7 +18,7 @@ export const InvestmentAdvisingContract: React.FC<InvestmentAdvisingContractProp
   email,
 }) => {
   return (
-    <div className="contract-container text-slate-300 text-sm space-y-4">
+    <div className="contract-container  text-sm space-y-4">
       <h1 className="text-2xl font-bold text-center mb-6">Investment Advising Contract</h1>
       
       <p className="indent">
@@ -64,7 +64,7 @@ export const InvestmentAdvisingContract: React.FC<InvestmentAdvisingContractProp
       <div className="border-b border-slate-600 pb-4">
         <h2 className="section-title font-medium mb-2">4. Acceptance of Disclosures</h2>
         <p className="indent">
-          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, investment risks, individual financial guidance, advisor positions, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href="https://eagle-investors.com/disclaimer" className="underline text-blue-600">https://eagle-investors.com/disclaimer</a>
+          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, investment risks, individual financial guidance, advisor positions, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href={process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"} className="underline text-blue-600">{process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"}</a>
         </p>
       </div>
 

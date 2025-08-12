@@ -214,7 +214,11 @@ export const adminAnnouncements = [
     id: "ann2",
     title: "IMPORTANT: Discord Security Alert - Beware of Imposters",
     content:
-      "BEWARE OF ANY IMPOSTERS who attempt to friend request or DM you using copycat accounts! Eagle Investors advisors will NEVER friend request you for any reason. Anyone sending friend requests that look like our accounts is an imposter and should be reported to Discord. Please examine all profiles closely to ensure you are not being scammed. Email us at info@eagle-investors.com if you need confirmation. We will never solicit you to any other domain other than https://eagle-investors.com/ and will never DM you about copy trading or depositing money anywhere. Stay Safe!",
+      "BEWARE OF ANY IMPOSTERS who attempt to friend request or DM you using copycat accounts! Eagle Investors advisors will NEVER friend request you for any reason. Anyone sending friend requests that look like our accounts is an imposter and should be reported to Discord. Please examine all profiles closely to ensure you are not being scammed. Email us at " +
+      (process.env.NEXT_PUBLIC_CONTACT_EMAIL || "info@eagle-investors.com") +
+      " if you need confirmation. We will never solicit you to any other domain other than " +
+      (process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com/") +
+      " and will never DM you about copy trading or depositing money anywhere. Stay Safe!",
     timestamp: "1 day ago",
     priority: "medium" as const,
     author: "Eagle Investors Team",
@@ -298,7 +302,7 @@ const createVideoList = (
       title,
       url,
       videoId,
-      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      thumbnailUrl: `${process.env.NEXT_PUBLIC_YOUTUBE_THUMBNAIL_BASE_URL || "https://img.youtube.com/vi"}/${videoId}/hqdefault.jpg`,
     };
   });
 };

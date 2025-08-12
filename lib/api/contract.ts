@@ -52,12 +52,35 @@ export async function signContract(contractData: ContractData) {
       body: JSON.stringify(contractData),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to sign contract");
+      // Handle the case where a contract already exists and is ready for payment
+      // This should NOT be treated as an error
+      if (
+        (response.status === 400 || response.status === 409) &&
+        (data.message === "Contract already exists and is ready for payment" ||
+         data.message === "Existing contract updated and ready for payment" ||
+         data.existingContract === true)
+      ) {
+        // Return the existing contract data as a successful response
+        return {
+          success: true,
+          data: data.data,
+          isExisting: true,
+          message: data.message
+        };
+      }
+
+      throw new Error(data.message || "Failed to sign contract");
     }
 
-    return await response.json();
+    return {
+      success: true,
+      data: data.data,
+      isExisting: data.existingContract || false,
+      message: data.message
+    };
   } catch (error) {
     console.error("Error signing contract:", error);
     throw error;

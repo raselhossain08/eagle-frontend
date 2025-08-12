@@ -18,7 +18,7 @@ const ensureDirectoryExists = (dirPath: string) => {
 export async function POST(request: Request) {
   try {
     // Check authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
     if (!token) {
       return NextResponse.json(
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     let htmlContent = "";
     if (packageType === "diamond") {
       // Render Diamond contract component to HTML
-      const element = DiamondContract({
+      const element = await DiamondContract({
         customerName: contractData.name,
         contractDate: new Date(contractData.date).toLocaleDateString('en-US', {
           year: 'numeric',

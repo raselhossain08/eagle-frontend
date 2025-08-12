@@ -5,7 +5,7 @@ import { verifyToken } from "@/lib/auth";
 export async function POST(request: Request) {
   try {
     // Check authentication
-    const cookieJar = cookies();
+    const cookieJar = await cookies();
     const token = cookieJar.get("token")?.value;
     if (!token) {
       return NextResponse.json(

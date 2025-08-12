@@ -19,7 +19,7 @@ export const BasicContract: React.FC<BasicContractProps> = ({
 }) => {
 
   return (
-    <div className="contract-container text-slate-300 text-sm space-y-4">
+    <div className="contract-container  text-sm space-y-4">
       <h1 className="text-2xl font-bold text-center mb-6">Advisory Contract</h1>
       
       <p className="indent">
@@ -65,7 +65,7 @@ export const BasicContract: React.FC<BasicContractProps> = ({
           Fees are to be billed to clients via either Stripe or PayPal (online payment processors) only through a secure checkout process. The firm does not deduct fees from clients' assets at any time. Clients will only be billed on a monthly basis.
         </p>
         <p className="indent mt-2">
-          Fees are to be collected via either Stripe or PayPal (online payment processors) only through a secure checkout process on <a href="https://eagle-investors.com" className="underline text-blue-600">https://eagle-investors.com</a>.
+          Fees are to be collected via either Stripe or PayPal (online payment processors) only through a secure checkout process on <a href={process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com"} className="underline text-blue-600">{process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com"}</a>.
         </p>
         <p className="indent mt-2">
           In light of CCR Section 260.238(j) - Investment Advisers: Fair, equitable and ethical principles, Eagle Investors LLC charges a fair and reasonable fee for the services provided. Lower fees for comparable services may be available from other sources. Fees are non-negotiable.
@@ -75,7 +75,7 @@ export const BasicContract: React.FC<BasicContractProps> = ({
       <div className="border-b border-slate-600 pb-4">
         <h2 className="section-title font-medium mb-2">4. Acceptance of Disclosures</h2>
         <p className="indent">
-          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, options and leverage trading risks, impersonal investment advice, individual financial guidance, advisor positions, paper or simulated trades, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href="https://eagle-investors.com/disclaimer" className="underline text-blue-600">https://eagle-investors.com/disclaimer</a>
+          The Client acknowledges the review and acceptance of the additional disclosures related to fiduciary duty, options and leverage trading risks, impersonal investment advice, individual financial guidance, advisor positions, paper or simulated trades, no guarantees, code of ethics and compliance as well as questions and contact information always available online at <a href={process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"} className="underline text-blue-600">{process.env.NEXT_PUBLIC_WORDPRESS_DISCLAIMER_URL || "https://eagle-investors.com/disclaimer"}</a>
         </p>
       </div>
 
