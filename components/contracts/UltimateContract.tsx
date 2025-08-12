@@ -18,7 +18,7 @@ export const UltimateContract: React.FC<UltimateContractProps> = ({
   email,
 }) => {
   return (
-    <div className="contract-container  text-sm space-y-4">
+    <div className="contract-container  text-white text-sm space-y-4">
       <h1 className="text-2xl font-bold text-center mb-6">Advisory Contract</h1>
       
       <p className="indent">
