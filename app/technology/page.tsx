@@ -59,13 +59,13 @@ export default function TechnologyPage() {
             edge in today's markets.
           </p>
           <div className="flex items-center justify-center space-x-2">
-            <Badge variant="secondary" className="text-sm">
+            <Badge variant="secondary" className="text-sm ">
               Proprietary Technology
             </Badge>
-            <Badge variant="outline" className="text-sm">
+            <Badge variant="outline" className="text-sm text-[#f7f9fb]">
               AI-Powered
             </Badge>
-            <Badge variant="outline" className="text-sm">
+            <Badge variant="outline" className="text-sm text-[#f7f9fb]">
               Real-Time Analytics
             </Badge>
           </div>
