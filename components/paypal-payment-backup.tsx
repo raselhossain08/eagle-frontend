@@ -63,11 +63,11 @@ export function PayPalPayment({
       // Add preconnect for faster loading
       const preconnect = document.createElement("link");
       preconnect.rel = "preconnect";
-      preconnect.href = "https://www.paypal.com";
+      preconnect.href = process.env.NEXT_PUBLIC_PAYPAL_SDK_URL?.replace('/sdk/js', '') || "https://www.paypal.com";
       document.head.appendChild(preconnect);
 
       const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD&intent=capture&disable-funding=credit,card`;
+      script.src = `${process.env.NEXT_PUBLIC_PAYPAL_SDK_URL || "https://www.paypal.com/sdk/js"}?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD&intent=capture&disable-funding=credit,card`;
       script.async = true;
       script.defer = true; // Use defer for better performance
 

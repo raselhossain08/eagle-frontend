@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -6,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import {
   Lock,
   Code,
@@ -24,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ComplianceTooltip } from "@/components/compliance-tooltip";
 
 export default function ScriptsPage() {
+  const router = useRouter();
   const user = mockUser;
   const hasAccess = user.subscription === "Infinity";
 
@@ -320,7 +324,25 @@ export default function ScriptsPage() {
                       </p>
                     </div>
                   </div>
-                  <Button className="w-full bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90 text-white font-bold text-lg py-3 shadow-glow-cyan transition-all duration-200 hover:scale-105">
+                  <Button 
+                    onClick={() => {
+                      // Create cart item from the package
+                      const cartItem = {
+                        id: 'quantitative-trading-script',
+                        name: 'Quantitative Trading Script',
+                        price: '47',
+                        description: 'Powerful algorithmic trading script with advanced features',
+                        type: "script-purchase"
+                      };
+                      
+                      // Save to localStorage
+                      localStorage.setItem('cart', JSON.stringify([cartItem]));
+                      
+                      // Navigate to checkout using Next.js router
+                      router.push('/checkout');
+                    }}
+                    className="w-full bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90 text-white font-bold text-lg py-3 shadow-glow-cyan transition-all duration-200 hover:scale-105"
+                  >
                     Add to Basket - $47/month
                   </Button>
                 </CardContent>

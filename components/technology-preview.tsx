@@ -1,182 +1,177 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { Code, Zap, TrendingUp, Bot, CheckCircle, Star } from "lucide-react"
-import Image from "next/image"
-
 export function TechnologyPreview() {
   return (
-    <section className="relative bg-slate-900 py-24 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-full px-6 py-3 mb-6">
-            <Code className="w-5 h-5 text-purple-400" />
-            <span className="text-purple-400 font-semibold uppercase tracking-wide text-sm">Technology Suite</span>
-          </div>
-          <h2 className="text-5xl lg:text-6xl font-bold text-white mb-6">
-            <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Advanced Trading
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-500 bg-clip-text text-transparent">
-              Technology
-            </span>
-          </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Professional-grade trading scripts and AI-powered tools designed to enhance your trading workflow and
-            decision-making process.
+    <div className="bg-gray-100 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="lg:text-center">
+          <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Technology Preview</h2>
+          <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            Explore Our Cutting-Edge Scripts
+          </p>
+          <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+            Unlock the power of automation with our technology preview scripts. Get a glimpse into the future of
+            workflow optimization.
           </p>
         </div>
 
-        {/* Featured Scripts Section */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-          <div>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
+        <div className="mt-10">
+          <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+            <div className="relative">
+              <dt>
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  {/* Heroicon name: outline/globe-alt */}
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                    />
+                  </svg>
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Market Analysis</p>
+              </dt>
+              <dd className="mt-2 ml-16 text-base text-gray-500">
+                Gain valuable insights into market trends and competitor strategies with our advanced analysis scripts.
+              </dd>
+            </div>
+
+            <div className="relative">
+              <dt>
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                  {/* Heroicon name: outline/lightning-bolt */}
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">AI-Powered Insights</p>
+              </dt>
+              <dd className="mt-2 ml-16 text-base text-gray-500">
+                Leverage the power of artificial intelligence to uncover hidden patterns and make data-driven decisions.
+              </dd>
+            </div>
+
+            <div className="relative">
+              <dt>
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                  {/* Heroicon name: outline/integration */}
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Premium Integration</p>
+              </dt>
+              <dd className="mt-2 ml-16 text-base text-gray-500">
+                Seamlessly integrate our scripts with your existing systems and workflows for maximum efficiency.
+              </dd>
+            </div>
+
+            <div className="relative">
+              <dt>
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                  {/* Heroicon name: outline/shield-check */}
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Secure & Reliable</p>
+              </dt>
+              <dd className="mt-2 ml-16 text-base text-gray-500">
+                Our scripts are built with security and reliability in mind, ensuring your data is always protected.
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="mt-12 lg:mt-16">
+          <div className="md:grid md:grid-cols-2 md:gap-8">
+            {/* Standalone Scripts Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 text-white">
+                <h3 className="text-lg font-semibold">Standalone Scripts</h3>
+                <p className="mt-1 text-sm">Perfect for individual tasks and quick solutions.</p>
               </div>
-              <div>
-                <h3 className="text-3xl font-bold text-white">Standalone Trading Scripts</h3>
-                <div className="flex items-center space-x-3 mt-2">
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">$47/month</Badge>
-                  <Badge variant="outline" className="border-cyan-500 text-cyan-400">
-                    Included in Infinity
-                  </Badge>
+              <div className="px-6 py-4">
+                <ul className="list-disc list-inside text-gray-700">
+                  <li>Access to individual scripts</li>
+                  <li>Limited support</li>
+                  <li>One-time purchase</li>
+                </ul>
+                <div className="mt-4">
+                  <button className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                    Explore Scripts
+                  </button>
                 </div>
               </div>
             </div>
 
-            <p className="text-gray-300 text-lg mb-6">
-              Access our complete library of professional trading scripts designed for TradingView and other platforms.
-              These automated tools help identify opportunities and manage risk across multiple markets.
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300">Multi-timeframe analysis scripts</span>
+            {/* Infinity Plan Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <h3 className="text-lg font-semibold">Infinity Plan</h3>
+                <p className="mt-1 text-sm">Unlock unlimited access to all scripts and premium features.</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300">Risk management calculators</span>
+              <div className="px-6 py-4">
+                <ul className="list-disc list-inside text-gray-700">
+                  <li>Unlimited script access</li>
+                  <li>Priority support</li>
+                  <li>Regular updates</li>
+                </ul>
+                <div className="mt-4">
+                  <button className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50">
+                    Get Infinity Access
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300">Custom indicator combinations</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300">Automated alert systems</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/technology">
-                <Button className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-6 py-3 text-lg font-semibold rounded-xl">
-                  View All Scripts
-                </Button>
-              </Link>
-              <Link href="/pricing">
-                <Button
-                  variant="outline"
-                  className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 px-6 py-3 text-lg font-semibold rounded-xl bg-transparent"
-                >
-                  Get Infinity Access
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50">
-              <Image
-                src="/images/trading-scripts-overview.png"
-                alt="Trading Scripts Overview"
-                width={600}
-                height={400}
-                className="rounded-2xl w-full h-auto"
-              />
-            </div>
-            {/* Floating badges */}
-            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-              20+ Scripts
-            </div>
-            <div className="absolute -bottom-4 -left-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-              Auto-Updates
             </div>
           </div>
         </div>
 
-        {/* Technology Cards Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border-slate-700/50 hover:border-purple-500/50 transition-all duration-300">
-            <CardHeader>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-white text-xl">Market Analysis Tools</CardTitle>
-              <CardDescription className="text-gray-400">
-                Advanced charting and technical analysis scripts for comprehensive market evaluation.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300">
-            <CardHeader>
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-4">
-                <Bot className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-white text-xl">AI-Powered Insights</CardTitle>
-              <CardDescription className="text-gray-400">
-                Machine learning algorithms that analyze patterns and provide intelligent trading suggestions.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border-slate-700/50 hover:border-green-500/50 transition-all duration-300">
-            <CardHeader>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-white text-xl">Premium Integration</CardTitle>
-              <CardDescription className="text-gray-400">
-                Seamless integration with popular trading platforms and real-time data feeds.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Pricing Highlight */}
-        <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 text-center">
-          <h3 className="text-2xl font-bold text-white mb-4">Get Complete Technology Access</h3>
-          <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-            Choose standalone script access for $47/month, or get everything included with our Infinity plan for
-            comprehensive trading support.
+        <div className="mt-8 text-center">
+          <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            3+ Scripts
+          </span>
+          <p className="mt-2 text-gray-500">
+            Discover a growing library of scripts designed to streamline your workflows.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
-              <div className="text-purple-400 font-semibold mb-1">Standalone Scripts</div>
-              <div className="text-2xl font-bold text-white">
-                $47<span className="text-lg text-gray-400">/month</span>
-              </div>
-            </div>
-            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-4">
-              <div className="text-cyan-400 font-semibold mb-1">Infinity Plan</div>
-              <div className="text-2xl font-bold text-white">
-                Everything<span className="text-lg text-gray-400"> Included</span>
-              </div>
-            </div>
-          </div>
+          <button className="mt-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-2 px-4 rounded">
+            View All Scripts
+          </button>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CreditCard, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { PaymentInfoDisplay } from "@/components/payment-info-display";
 import Cookies from "js-cookie";
 
 // Extend the global Window interface
@@ -79,11 +80,11 @@ export function PayPalPayment({
       // Add preconnect for faster loading
       const preconnect = document.createElement("link");
       preconnect.rel = "preconnect";
-      preconnect.href = "https://www.paypal.com";
+      preconnect.href = process.env.NEXT_PUBLIC_PAYPAL_SDK_URL?.replace('/sdk/js', '') || "https://www.paypal.com";
       document.head.appendChild(preconnect);
 
       const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD&intent=capture&disable-funding=credit,card`;
+      script.src = `${process.env.NEXT_PUBLIC_PAYPAL_SDK_URL || "https://www.paypal.com/sdk/js"}?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD&intent=capture&disable-funding=credit,card`;
       script.async = true;
 
       const loadTimeout = setTimeout(() => {
@@ -431,24 +432,22 @@ export function PayPalPayment({
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="bg-brand-bg-light border-brand-border">
-        <CardContent className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white mb-2">
-              Payment Details
-            </h3>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-400">
-                Product: <span className="text-white">{productName}</span>
-              </p>
-              <p className="text-gray-400">
-                Amount: <span className="text-white">${amount} USD</span>
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Payment Information Display */}
+      <PaymentInfoDisplay 
+        productName={productName}
+        amount={parseFloat(amount) || 0}
+        subscriptionType={subscriptionType}
+        businessInfo={{
+          name: process.env.NEXT_PUBLIC_BUSINESS_NAME || "Eagle Investors",
+          supportEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@eagle-investors.com",
+          website: process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://eagle-investors.com",
+          phone: process.env.NEXT_PUBLIC_BUSINESS_PHONE,
+        }}
+      />
 
-          {paymentStatus === "processing" && (
+      <Card className="bg-brand-bg-light border-brand-border">
+        <CardContent className="p-6">{paymentStatus === "processing" && (
             <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <div className="flex items-center space-x-2">
                 <Loader2 className="w-5 h-5 animate-spin text-blue-400" />

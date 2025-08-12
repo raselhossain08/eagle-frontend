@@ -21,6 +21,7 @@ interface PDFSigningModalProps {
   isOpen: boolean;
   onClose: () => void;
   productType: string;
+  cloudinaryUrl?: string; // Optional Cloudinary URL for dynamically generated contracts
   onPaymentSuccess?: (paymentData: any) => void;
 }
 
@@ -57,6 +58,7 @@ export function PDFSigningModal({
   isOpen,
   onClose,
   productType,
+  cloudinaryUrl,
   onPaymentSuccess,
 }: PDFSigningModalProps) {
   const [step, setStep] = useState<"pdf" | "sign" | "payment">("pdf");
@@ -68,6 +70,10 @@ export function PDFSigningModal({
   const pdfPath =
     PDF_CONTRACTS[productType as keyof typeof PDF_CONTRACTS] ||
     PDF_CONTRACTS.basic;
+  
+  // For dynamic contracts, we might get cloudinaryUrl from props
+  const effectivePdfPath = cloudinaryUrl || pdfPath;
+  
   const productInfo =
     PRODUCT_PRICING[productType as keyof typeof PRODUCT_PRICING] ||
     PRODUCT_PRICING.basic;
@@ -249,7 +255,7 @@ export function PDFSigningModal({
                 {/* PDF Viewer */}
                 <div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
                   <iframe
-                    src={pdfPath}
+                    src={effectivePdfPath}
                     width="100%"
                     height="100%"
                     title="Advisory Contract"

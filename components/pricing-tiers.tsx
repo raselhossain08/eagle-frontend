@@ -289,7 +289,7 @@ export function PricingTiers() {
               )}
 
               <Card
-                className={`relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border-slate-700/50 flex flex-col h-full transition-all duration-500 hover:transform hover:scale-105 
+                className={`relative my-box2
                 ${
                   tier.popular && !tier.isInfinity
                     ? "ring-2 ring-cyan-400/50 shadow-2xl shadow-cyan-500/20"
