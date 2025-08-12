@@ -53,6 +53,27 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        eagle: {
+          background: "hsl(var(--eagle-background))",
+          foreground: "hsl(var(--eagle-foreground))",
+          card: "hsl(var(--eagle-card))",
+          "card-foreground": "hsl(var(--eagle-card-foreground))",
+          popover: "hsl(var(--eagle-popover))",
+          "popover-foreground": "hsl(var(--eagle-popover-foreground))",
+          primary: "hsl(var(--eagle-primary))",
+          "primary-foreground": "hsl(var(--eagle-primary-foreground))",
+          secondary: "hsl(var(--eagle-secondary))",
+          "secondary-foreground": "hsl(var(--eagle-secondary-foreground))",
+          muted: "hsl(var(--eagle-muted))",
+          "muted-foreground": "hsl(var(--eagle-muted-foreground))",
+          accent: "hsl(var(--eagle-accent))",
+          "accent-foreground": "hsl(var(--eagle-accent-foreground))",
+          destructive: "hsl(var(--eagle-destructive))",
+          "destructive-foreground": "hsl(var(--eagle-destructive-foreground))",
+          border: "hsl(var(--eagle-border))",
+          input: "hsl(var(--eagle-input))",
+          ring: "hsl(var(--eagle-ring))",
+        },
         "brand-bg-dark": "#0D1117", // Main background
         "brand-bg-light": "#161B22", // Card/surface background
         "brand-border": "#30363D", // Borders

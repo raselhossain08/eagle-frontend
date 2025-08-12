@@ -45,6 +45,27 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Custom Eagle Theme Colors */
+    --eagle-background: 222.2 84% 4.9%;
+    --eagle-foreground: 210 40% 98%;
+    --eagle-card: 222.2 84% 4.9%;
+    --eagle-card-foreground: 210 40% 98%;
+    --eagle-popover: 222.2 84% 4.9%;
+    --eagle-popover-foreground: 210 40% 98%;
+    --eagle-primary: 188 100% 50%;
+    --eagle-primary-foreground: 222.2 84% 4.9%;
+    --eagle-secondary: 217.2 32.6% 17.5%;
+    --eagle-secondary-foreground: 210 40% 98%;
+    --eagle-muted: 217.2 32.6% 17.5%;
+    --eagle-muted-foreground: 215 20.2% 65.1%;
+    --eagle-accent: 217.2 32.6% 17.5%;
+    --eagle-accent-foreground: 210 40% 98%;
+    --eagle-destructive: 0 62.8% 30.6%;
+    --eagle-destructive-foreground: 210 40% 98%;
+    --eagle-border: 217.2 32.6% 17.5%;
+    --eagle-input: 217.2 32.6% 17.5%;
+    --eagle-ring: 188 100% 50%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -285,4 +306,42 @@ html {
 .tradingview-widget-container iframe {
   height: 40px !important;
   min-height: 40px !important;
+}
+
+/* Eagle Theme Utility Classes */
+.bg-eagle-background {
+  background-color: hsl(var(--eagle-background));
+}
+.text-eagle-foreground {
+  color: hsl(var(--eagle-foreground));
+}
+.bg-eagle-card {
+  background-color: hsl(var(--eagle-card));
+}
+.text-eagle-card-foreground {
+  color: hsl(var(--eagle-card-foreground));
+}
+.text-eagle-primary {
+  color: hsl(var(--eagle-primary));
+}
+.bg-eagle-primary {
+  background-color: hsl(var(--eagle-primary));
+}
+.text-eagle-primary-foreground {
+  color: hsl(var(--eagle-primary-foreground));
+}
+.text-eagle-secondary {
+  color: hsl(var(--eagle-secondary));
+}
+.bg-eagle-secondary {
+  background-color: hsl(var(--eagle-secondary));
+}
+.text-eagle-secondary-foreground {
+  color: hsl(var(--eagle-secondary-foreground));
+}
+.text-eagle-muted-foreground {
+  color: hsl(var(--eagle-muted-foreground));
+}
+.border-eagle-border {
+  border-color: hsl(var(--eagle-border));
 }

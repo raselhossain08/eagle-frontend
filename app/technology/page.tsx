@@ -41,19 +41,19 @@ import {
 export default function TechnologyPage() {
   const router = useRouter();
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-eagle-background">
       <Header />
 
       {/* Hero Section */}
       <section className="relative py-20 px-4">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center mb-6">
-            <Zap className="w-12 h-12 text-primary mr-4" />
-            <h1 className="text-5xl font-bold text-foreground">
+            <Zap className="w-12 h-12 text-eagle-primary mr-4" />
+            <h1 className="text-5xl font-bold text-eagle-foreground">
               Eagle Technology Suite
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-eagle-muted-foreground max-w-3xl mx-auto mb-8">
             Cutting-edge trading technology, AI-powered insights, and
             comprehensive education tools designed to give you the competitive
             edge in today's markets.
@@ -77,15 +77,15 @@ export default function TechnologyPage() {
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Custom Trading Scripts */}
-            <Card className="bg-card border-border flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card className="bg-eagle-card border-eagle-border flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <Code className="w-8 h-8 text-primary" />
+                  <Code className="w-8 h-8 text-eagle-primary" />
                   <div>
-                    <CardTitle className="text-2xl text-foreground">
+                    <CardTitle className="text-2xl text-eagle-card-foreground">
                       Custom Trading Scripts
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground">
+                    <CardDescription className="text-eagle-muted-foreground">
                       Professional-grade algorithmic trading signals with 3+
                       powerful scripts
                     </CardDescription>
@@ -97,31 +97,31 @@ export default function TechnologyPage() {
                   <img
                     src="/images/trading-scripts-overview.png"
                     alt="Eagle Trading Scripts Overview - 3 Powerful Algorithms"
-                    className="rounded-lg border border-border shadow-md"
+                    className="rounded-lg border border-eagle-border shadow-md"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <img
                       src="/images/meta-trading-signals.png"
                       alt="Meta Trading Signals with Profit Targets"
-                      className="rounded-lg border border-border"
+                      className="rounded-lg border border-eagle-border"
                     />
                     <img
                       src="/images/tesla-trading-setup.png"
                       alt="Tesla Trading Setup with Risk Management"
-                      className="rounded-lg border border-border"
+                      className="rounded-lg border border-eagle-border"
                     />
                   </div>
                   <img
                     src="/images/multi-asset-trading.png"
                     alt="Multi-Asset Trading Analysis"
-                    className="rounded-lg border border-border"
+                    className="rounded-lg border border-eagle-border"
                   />
                 </div>
 
                 <div className="space-y-4 flex-1 flex flex-col justify-end">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-2xl font-bold text-primary">
+                      <span className="text-2xl font-bold text-eagle-primary">
                         $47/month
                       </span>
                       <Badge
@@ -139,11 +139,11 @@ export default function TechnologyPage() {
                     </Badge>
                   </div>
 
-                  <div className="bg-gradient-to-br from-primary/10 to-green-500/10 p-4 rounded-lg border border-primary/20">
-                    <h4 className="font-semibold text-foreground mb-2">
+                  <div className="bg-gradient-to-br from-eagle-primary/10 to-green-500/10 p-4 rounded-lg border border-eagle-primary/20">
+                    <h4 className="font-semibold text-eagle-card-foreground mb-2">
                       🚀 Included Scripts:
                     </h4>
-                    <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground">
+                    <div className="grid grid-cols-1 gap-2 text-sm text-eagle-muted-foreground">
                       <div className="flex items-center space-x-2">
                         <Target className="w-3 h-3 text-green-400" />
                         <span>
@@ -168,25 +168,25 @@ export default function TechnologyPage() {
                     </div>
                   </div>
 
-                  <ul className="space-y-2 text-muted-foreground">
+                  <ul className="space-y-2 text-eagle-muted-foreground">
                     <li className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-primary" />
+                      <Clock className="w-4 h-4 text-eagle-primary" />
                       <span>
                         Real-time buy/sell signals across all timeframes
                       </span>
                     </li>
                     <li className="flex items-center space-x-2">
-                      <Target className="w-4 h-4 text-primary" />
+                      <Target className="w-4 h-4 text-eagle-primary" />
                       <span>Automated profit targets & stop loss levels</span>
                     </li>
                     <li className="flex items-center space-x-2">
-                      <BarChart3 className="w-4 h-4 text-primary" />
+                      <BarChart3 className="w-4 h-4 text-eagle-primary" />
                       <span>
                         Multi-asset compatibility (Stocks, Crypto, Forex)
                       </span>
                     </li>
                     <li className="flex items-center space-x-2">
-                      <Brain className="w-4 h-4 text-primary" />
+                      <Brain className="w-4 h-4 text-eagle-primary" />
                       <span>Advanced risk management algorithms</span>
                     </li>
                   </ul>
@@ -209,12 +209,12 @@ export default function TechnologyPage() {
                         // Navigate to checkout using Next.js router
                         router.push('/checkout');
                       }}
-                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                      className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
                     >
                       Add to Basket - $47/month
                     </Button>
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-sm text-eagle-muted-foreground mb-2">
                         💎 Or get better value with:
                       </p>
                       <InfinityUpgradeButton
@@ -231,15 +231,15 @@ export default function TechnologyPage() {
             </Card>
 
             {/* AI Advisor */}
-            <Card className="bg-card border-border flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card className="bg-eagle-card border-eagle-border flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <Bot className="w-8 h-8 text-primary" />
+                  <Bot className="w-8 h-8 text-eagle-primary" />
                   <div>
-                    <CardTitle className="text-2xl text-foreground">
+                    <CardTitle className="text-2xl text-eagle-card-foreground">
                       Eagle AI Advisor
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground">
+                    <CardDescription className="text-eagle-muted-foreground">
                       Enhanced AI-powered investment intelligence and real-time
                       market analysis
                     </CardDescription>
@@ -251,15 +251,15 @@ export default function TechnologyPage() {
                   <img
                     src="/images/enhanced-ai-advisor-chat.png"
                     alt="Enhanced AI Advisor Chat Interface"
-                    className="rounded-lg border border-border w-full shadow-lg"
+                    className="rounded-lg border border-eagle-border w-full shadow-lg"
                   />
 
                   <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 rounded-lg border border-amber-500/20">
-                    <h4 className="font-semibold text-foreground mb-2 flex items-center">
+                    <h4 className="font-semibold text-eagle-card-foreground mb-2 flex items-center">
                       <Brain className="w-4 h-4 text-amber-500 mr-2" />
                       🤖 AI-Powered Features:
                     </h4>
-                    <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground">
+                    <div className="grid grid-cols-1 gap-2 text-sm text-eagle-muted-foreground">
                       <div className="flex items-center space-x-2">
                         <MessageSquare className="w-3 h-3 text-amber-500" />
                         <span>Interactive investment strategy discussions</span>
