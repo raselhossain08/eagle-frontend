@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,29 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ActivatePage() {
+// Loading component for Suspense fallback
+function ActivatePageLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Loading</CardTitle>
+          <CardDescription className="text-center">
+            Please wait...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+function ActivatePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -333,5 +355,14 @@ export default function ActivatePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary
+export default function ActivatePage() {
+  return (
+    <Suspense fallback={<ActivatePageLoading />}>
+      <ActivatePageContent />
+    </Suspense>
   );
 }
