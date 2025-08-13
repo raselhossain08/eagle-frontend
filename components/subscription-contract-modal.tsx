@@ -326,7 +326,7 @@ export function SubscriptionContractModal({
       case "contract":
         return (
           <div className="space-y-4">
-            <div className="max-h-96 overflow-y-auto border rounded-lg p-4">
+            <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-black">
               {renderContractComponent()}
             </div>
             <div className="flex justify-between items-center">

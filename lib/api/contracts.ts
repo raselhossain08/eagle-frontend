@@ -155,7 +155,7 @@ export const getUserContracts = async (): Promise<SignedContract[]> => {
   const response = await fetch(`${API_URL}/contracts/my-contracts`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
 
@@ -165,7 +165,78 @@ export const getUserContracts = async (): Promise<SignedContract[]> => {
     throw new Error(data.message || "Failed to fetch contracts");
   }
 
-  return data.data;
+  // Handle guest mode response
+  if (data.guestMode && !data.isAuthenticated) {
+    // Return empty array for guest users, let the UI handle the guest flow
+    return [];
+  }
+
+  // Handle authenticated user response
+  if (Array.isArray(data.data)) {
+    return data.data;
+  }
+
+  // Fallback - return empty array if data structure is unexpected
+  return [];
+};
+
+// Check if user is in guest mode and get guest form structure
+export const checkGuestMode = async (): Promise<{
+  isGuestMode: boolean;
+  isAuthenticated: boolean;
+  guestFormData?: any;
+}> => {
+  const token = Cookies.get("token");
+
+  const response = await fetch(`${API_URL}/contracts/my-contracts`, {
+    method: "GET",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to check authentication status");
+  }
+
+  return {
+    isGuestMode: data.guestMode || false,
+    isAuthenticated: data.isAuthenticated || false,
+    guestFormData: data.guestMode ? data.data : null,
+  };
+};
+
+// Get contracts for guest users
+export const getGuestContracts = async (guestInfo: {
+  name: string;
+  email: string;
+  phone?: string;
+}): Promise<{
+  contracts: SignedContract[];
+  guestId: string;
+  message: string;
+}> => {
+  const response = await fetch(`${API_URL}/contracts/my-contracts/guest`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(guestInfo),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch guest contracts");
+  }
+
+  return {
+    contracts: data.data || [],
+    guestId: data.guestId || "",
+    message: data.message || "",
+  };
 };
 
 // Get contract by ID
