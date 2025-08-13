@@ -25,7 +25,6 @@ import {
   signContract,
   updatePaymentStatus,
   getUserContracts,
-  generateContractPDF,
 } from "@/lib/api/contracts";
 import { useAuth } from "@/context/authContext";
 import { mockUser } from "@/lib/data";
@@ -453,48 +452,14 @@ export default function CheckoutContent() {
         day: 'numeric'
       });
       
-      // Generate PDF data
-      const pdfData = {
-        contractData: {
-          name: signatureData.customerName,
-          date: new Date(),
-          signature: signatureData.signature,
-          email: signatureData.customerEmail,
-          price: getTotalPrice(useMemberPrice).toLocaleString(),
-          productName: cartItems[0]?.name || "Mentorship Package",
-        },
-        packageType: isDiamond ? "diamond" : 
-                    isInfinity ? "infinity" : 
-                    productType === "basic-subscription" ? "basic" :
-                    productType === "trading-tutor" ? "trading-tutor" :
-                    productType === "eagle-ultimate" ? "ultimate" :
-                    productType === "investment-advising" ? "investment-advising" :
-                    productType.includes("script") ? "script" : productType,
-      };
-      
-      // Try to generate PDF first if needed
-      let pdfPath = `contracts/${productType}-${signatureData.customerEmail}-${Date.now()}.pdf`;
-      let cloudinaryUrl = "";
-      
-      // Always try to generate a PDF regardless of contract type
-      try {
-        const pdfResult = await generateContractPDF(pdfData);
-        pdfPath = pdfResult.pdfPath;
-        cloudinaryUrl = pdfResult.cloudinaryUrl || pdfResult.pdfUrl;
-      } catch (pdfError) {
-        console.error("PDF generation error:", pdfError);
-        // Continue with default path if PDF generation fails
-      }
-      
+      // Prepare contract data (no PDF generation needed - backend will store contract data only)
       const contractData = {
         name: signatureData.customerName,
         email: signatureData.customerEmail,
         signature: signatureData.signature,
         productType,
-        pdfPath,
-        pdfUrl: cloudinaryUrl, // Add the Cloudinary URL
         subscriptionType: "monthly" as const,
-        amount: getTotalPrice(useMemberPrice), // Remove toLocaleString() to keep as number
+        amount: getTotalPrice(useMemberPrice), // Keep as number
         isDiamondContract: isDiamond ? true : undefined,
         contractDate: formattedDate,
         productName: cartItems[0]?.name || "Mentorship Package",
