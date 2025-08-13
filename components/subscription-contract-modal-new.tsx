@@ -48,7 +48,7 @@ interface PaymentData {
 
 type Step = "contract" | "signature" | "payment" | "complete";
 
-function SubscriptionContractModal({
+export default function SubscriptionContractModal({
   isOpen,
   onClose,
   subscriptionType,
@@ -412,7 +412,3 @@ function SubscriptionContractModal({
     </Dialog>
   );
 }
-
-// Export both default and named export for compatibility
-export { SubscriptionContractModal };
-export default SubscriptionContractModal;

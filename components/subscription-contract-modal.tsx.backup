@@ -1,0 +1,576 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, FileText, Pen, CreditCard, Download } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { PaymentMethodSelector } from "@/components/payment-method-selector";
+import {
+  signContract,
+  getUserContracts,
+  type SignedContractData,
+} from "@/lib/api/contracts";
+// Remove PDF utilities import as we no longer generate PDFs on backend
+import DiamondContract from "@/components/contracts/DiamondContract";
+import InfinityContract from "@/components/contracts/InfinityContract";
+import BasicContract from "@/components/contracts/BasicContract";
+import SignatureCanvas from "@/components/signature-canvas";
+
+interface SubscriptionContractModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  packageType: "basic" | "diamond" | "infinity";
+  onPaymentSuccess?: (paymentData: any) => void;
+  defaultSubscriptionType?: "monthly" | "yearly";
+}
+
+export interface ContractSignatureData {
+  name: string;
+  email: string;
+  signature: string;
+  date: Date;
+}
+
+const PACKAGE_PRICING = {
+  basic: {
+    monthly: 0,
+    yearly: 0,
+    name: "Basic Package",
+  },
+  diamond: {
+    monthly: 76,
+    yearly: 760,
+    name: "Diamond Package",
+  },
+  infinity: {
+    monthly: 127,
+    yearly: 1270,
+    name: "Infinity Package",
+  },
+};
+
+export function SubscriptionContractModal({
+  isOpen,
+  onClose,
+  packageType,
+  onPaymentSuccess,
+  defaultSubscriptionType = "monthly",
+}: SubscriptionContractModalProps) {
+  const [step, setStep] = useState<"contract" | "sign" | "payment" | "success">(
+    "payment"
+  );
+  const [subscriptionType, setSubscriptionType] = useState<
+    "monthly" | "yearly"
+  >(defaultSubscriptionType);
+  const [contractId, setContractId] = useState<string>("");
+  // Remove PDF-related state as we're not generating PDFs anymore
+  const [contractSigned, setContractSigned] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signatureData, setSignatureData] = useState({
+    name: "",
+    email: "",
+    signature: "",
+  });
+
+  const packageInfo = PACKAGE_PRICING[packageType];
+  const currentPrice = packageInfo[subscriptionType];
+  const subscriptionTypeText =
+    subscriptionType === "yearly" ? "Yearly" : "Monthly";
+  const savingsAmount = packageInfo.yearly
+    ? packageInfo.monthly * 12 - packageInfo.yearly
+    : 0;
+
+  // Check for existing contracts when modal opens
+  useEffect(() => {
+    const checkExistingContract = async () => {
+      if (!isOpen) {
+        // Reset modal state when closed
+        setStep("contract");
+        setContractId("");
+        setPdfUrl("");
+        setSignatureData({ name: "", email: "", signature: "" });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Sync subscription type with default
+      setSubscriptionType(defaultSubscriptionType);
+
+      try {
+        const contracts = await getUserContracts();
+        const existingContract = contracts.find(
+          (contract) =>
+            contract.productType === packageType &&
+            (contract.status === "payment_pending" ||
+              contract.status === "signed")
+        );
+
+        if (existingContract) {
+          // Use the existing contract
+          setContractId(existingContract._id);
+
+          // Set PDF URL using utility function
+          const pdfInfo = getContractPDFUrl(existingContract);
+          if (pdfInfo.url) {
+            setPdfUrl(pdfInfo.url);
+          }
+
+          // Fill in the signature data with existing contract info
+          setSignatureData({
+            name: existingContract.name,
+            email: existingContract.email,
+            signature: existingContract.signature,
+          });
+
+          // Always skip directly to payment if contract exists (signed or payment_pending)
+          setStep("payment");
+          toast({
+            title: "Contract Ready",
+            description:
+              existingContract.status === "payment_pending" 
+                ? "Your contract is signed and ready for payment."
+                : "Using your existing contract for this package. Proceeding to payment.",
+          });
+        }
+      } catch (error) {
+        console.error("Error checking existing contracts:", error);
+        // Don't show error to user, just proceed normally
+      }
+    };
+
+    checkExistingContract();
+  }, [isOpen, packageType, defaultSubscriptionType]);
+
+  const handleSignSubmit = async () => {
+    if (!signatureData.name || !signatureData.signature) {
+      toast({
+        title: "Error",
+        description: "Please sign the contract first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Store the signed contract (no PDF generation needed)
+      const signedContractData: SignedContractData = {
+        name: signatureData.name,
+        email: signatureData.email,
+        signature: signatureData.signature,
+        productType: packageType,
+        subscriptionType,
+      };
+
+      const result = await signContract(signedContractData);
+      setContractId(result._id);
+
+      if (result.isExisting) {
+        toast({
+          title: "Existing Contract Found",
+          description:
+            "Using your existing contract for this package. Proceeding to payment.",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Contract signed successfully",
+        });
+      }
+
+      setStep("payment");
+    } catch (error: any) {
+      console.error("Error signing contract:", error);
+
+      // Check if this is a "contract already exists" error with existing contract data (legacy)
+      if (
+        error.message === "Contract already exists for this product" &&
+        error.existingContract
+      ) {
+        const existingContract = error.existingContract;
+
+        // Use the existing contract
+        setContractId(existingContract._id);
+
+        // Set PDF URL using utility function
+        const pdfInfo = getContractPDFUrl(existingContract);
+        if (pdfInfo.url) {
+          setPdfUrl(pdfInfo.url);
+        }
+
+        // Fill in the signature data with existing contract info
+        setSignatureData({
+          name: existingContract.name || signatureData.name,
+          email: existingContract.email || signatureData.email,
+          signature: existingContract.signature || signatureData.signature,
+        });
+
+        // Always proceed to payment for existing contracts, no error message
+        toast({
+          title: "Contract Ready",
+          description:
+            "Using your existing contract for this package. Proceeding to payment.",
+        });
+
+        setStep("payment");
+        return;
+      }
+
+      // Handle signed contract with pending payment - no error, just proceed to payment
+      if (
+        error.message === "Contract already exists for this product" ||
+        error.message === "Contract signed but payment pending"
+      ) {
+        // If we reach here, the contract exists and is signed, just proceed to payment
+        toast({
+          title: "Contract Ready",
+          description: "Your contract is ready. Please complete the payment.",
+        });
+        setStep("payment");
+        return;
+      }
+
+      // Check if this is an active subscription error
+      if (
+        error.message ===
+        "You already have an active subscription for this product"
+      ) {
+        toast({
+          title: "Active Subscription Found",
+          description:
+            "If you had a scheduled downgrade, please try again in a moment as it may have been cancelled.",
+          variant: "default",
+        });
+        return;
+      }
+
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign contract",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = (paymentData: any) => {
+    toast({
+      title: "Payment Successful",
+      description: "Your subscription has been activated!",
+    });
+    setStep("success");
+    onPaymentSuccess?.(paymentData);
+  };
+
+  const renderContractComponent = () => {
+    // For modal use, we don't pass the onContractSave handler to the contract components
+    // since we handle signing separately in the modal
+    const contractProps = {
+      isModal: true,
+      customerName: signatureData.name || "Customer",
+      contractDate: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      price: currentPrice.toString(),
+    };
+
+    switch (packageType) {
+      case "diamond":
+        return <DiamondContract {...contractProps} />;
+      case "infinity":
+        return <InfinityContract {...contractProps} />;
+      case "basic":
+        return <BasicContract {...contractProps} />;
+      default:
+        return <BasicContract {...contractProps} />;
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (step) {
+      case "contract":
+        return (
+          <div className="space-y-4">
+            <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-black">
+              {renderContractComponent()}
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-semibold">{packageInfo.name}</h3>
+                <p className="text-muted-foreground">
+                  ${currentPrice}{" "}
+                  {subscriptionType === "yearly" ? "per year" : "per month"}
+                </p>
+              </div>
+              <Button onClick={() => setStep("sign")}>
+                Review & Sign Contract
+              </Button>
+            </div>
+          </div>
+        );
+
+      case "sign":
+        return (
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Pen className="h-5 w-5" />
+                  <h3 className="font-semibold">Sign Contract</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input
+                      id="name"
+                      value={signatureData.name}
+                      onChange={(e) =>
+                        setSignatureData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={signatureData.email}
+                      onChange={(e) =>
+                        setSignatureData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter your email"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Digital Signature *</Label>
+                    <SignatureCanvas
+                      onSignatureChange={(signature) =>
+                        setSignatureData((prev) => ({
+                          ...prev,
+                          signature,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setStep("contract")}>
+                Back to Contract
+              </Button>
+              <Button onClick={handleSignSubmit} disabled={isSubmitting}>
+                {isSubmitting ? "Processing..." : "Sign & Proceed to Payment"}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case "payment":
+        return (
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <h3 className="font-semibold">
+                    Contract Signed Successfully
+                  </h3>
+                </div>
+
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>Name: {signatureData.name}</p>
+                  <p>Email: {signatureData.email}</p>
+                  <p>Date: {new Date().toLocaleDateString()}</p>
+                  {pdfUrl && (
+                    <div className="flex items-center gap-2 pt-2">
+                      <FileText className="h-4 w-4" />
+                      <a
+                        href={pdfUrl}
+                        download
+                        className="text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        Download Signed Contract{" "}
+                        <Download className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CreditCard className="h-5 w-5" />
+                  <h3 className="font-semibold">Complete Payment</h3>
+                </div>
+
+                <div className="mb-6">
+                  {/* Subscription Type Selector */}
+                  <div className="mb-4">
+                    <Label className="text-sm font-medium">
+                      Subscription Type
+                    </Label>
+                    <div className="flex gap-3 mt-2">
+                      <Button
+                        type="button"
+                        variant={
+                          subscriptionType === "monthly" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setSubscriptionType("monthly")}
+                        className="flex-1"
+                      >
+                        Monthly - ${packageInfo.monthly}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          subscriptionType === "yearly" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setSubscriptionType("yearly")}
+                        className="flex-1"
+                      >
+                        Yearly - ${packageInfo.yearly}
+                        {savingsAmount > 0 && (
+                          <span className="ml-1 text-xs bg-green-500 text-white px-1 rounded">
+                            Save ${savingsAmount}
+                          </span>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center mb-2">
+                    <span>
+                      {packageInfo.name} ({subscriptionTypeText})
+                    </span>
+                    <span className="font-semibold">${currentPrice}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {subscriptionType === "yearly"
+                      ? "Paid annually"
+                      : "Recurring monthly subscription"}
+                  </p>
+                </div>
+
+                <PaymentMethodSelector
+                  contractId={contractId}
+                  amount={currentPrice.toString()}
+                  productName={`${packageInfo.name} (${subscriptionTypeText})`}
+                  subscriptionType={subscriptionType}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={(error: string) => {
+                    toast({
+                      title: "Payment Failed",
+                      description: error,
+                      variant: "destructive",
+                    });
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "success":
+        return (
+          <div className="text-center space-y-4">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+            <h3 className="text-xl font-semibold">Subscription Activated!</h3>
+            <p className="text-muted-foreground">
+              Your {packageInfo.name} subscription has been successfully
+              activated. You now have access to all features included in your
+              package.
+            </p>
+            {pdfUrl && (
+              <div className="pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      await downloadContractPDF({ 
+                        cloudinaryUrl: pdfUrl.includes('cloudinary') ? pdfUrl : undefined,
+                        pdfUrl: pdfUrl.includes('cloudinary') ? undefined : pdfUrl,
+                        _id: contractId,
+                        productType: packageType 
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to download contract",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Contract Copy
+                </Button>
+              </div>
+            )}
+            <Button onClick={onClose} className="w-full mt-4">
+              Continue to Dashboard
+            </Button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const getStepTitle = () => {
+    switch (step) {
+      case "contract":
+        return `${packageInfo.name} - Contract Review`;
+      case "sign":
+        return "Sign Contract";
+      case "payment":
+        return "Complete Payment";
+      case "success":
+        return "Subscription Activated";
+      default:
+        return "Subscription Management";
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{getStepTitle()}</DialogTitle>
+        </DialogHeader>
+
+        {renderStepContent()}
+      </DialogContent>
+    </Dialog>
+  );
+}

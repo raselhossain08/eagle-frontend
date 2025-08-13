@@ -9,10 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ["puppeteer"],
-    serverActions: true,
-  },
   env: {
     // Make sure these are available at build time
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
