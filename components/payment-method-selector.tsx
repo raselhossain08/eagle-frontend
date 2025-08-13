@@ -112,10 +112,10 @@ export function PaymentMethodSelector({
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">
+        <h3 className="text-lg font-semibold mb-2 text-white">
           Choose Your Payment Method
         </h3>
-        <p className="text-gray-600">
+        <p className="text-white">
           Select how you'd like to pay for {productName}
         </p>
       </div>
@@ -192,7 +192,7 @@ export function PaymentMethodSelector({
       </div>
 
       <div className="text-center pt-4">
-        <div className="text-2xl font-bold mb-2">Total: ${amount}</div>
+        <div className="text-2xl font-bold mb-2 text-white">Total: ${amount}</div>
         <p className="text-sm text-gray-500">
           All payments are secure and encrypted
         </p>

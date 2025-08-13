@@ -155,9 +155,8 @@ export function PayPalPayment({
             setPaymentStatus("processing");
 
             const token = Cookies.get("token");
-            if (!token) {
-              throw new Error("Authentication token not found");
-            }
+            // For guest users, token might not exist
+            console.log("🔑 Token status:", token ? "Available" : "Guest mode");
 
             console.log("Creating PayPal order...");
 
@@ -167,7 +166,7 @@ export function PayPalPayment({
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
+                  ...(token && { Authorization: `Bearer ${token}` }), // Only add Authorization header if token exists
                 },
                 body: JSON.stringify({
                   contractId,
@@ -202,9 +201,7 @@ export function PayPalPayment({
             setPaymentStatus("processing");
 
             const token = Cookies.get("token");
-            if (!token) {
-              throw new Error("Authentication token not found");
-            }
+            console.log("🔑 Capture token status:", token ? "Available" : "Guest mode");
 
             console.log("Capturing PayPal payment:", data.orderID);
 
@@ -214,7 +211,7 @@ export function PayPalPayment({
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
+                  ...(token && { Authorization: `Bearer ${token}` }), // Only add Authorization header if token exists
                 },
                 body: JSON.stringify({
                   contractId,

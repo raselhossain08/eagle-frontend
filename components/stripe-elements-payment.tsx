@@ -62,6 +62,7 @@ function PaymentForm({
     try {
       // Create payment intent
       const token = Cookies.get("token");
+      console.log("🔑 Stripe token status:", token ? "Available" : "Guest mode");
 
       console.log("🔄 Creating Stripe payment intent...");
       console.log("Contract ID:", contractId);
@@ -73,7 +74,7 @@ function PaymentForm({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...(token && { Authorization: `Bearer ${token}` }), // Only add Authorization header if token exists
           },
           body: JSON.stringify({
             contractId,
@@ -143,7 +144,7 @@ function PaymentForm({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...(token && { Authorization: `Bearer ${token}` }), // Only add Authorization header if token exists
           },
           body: JSON.stringify({
             paymentIntentId,

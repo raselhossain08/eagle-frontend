@@ -52,8 +52,8 @@ interface CartItem {
 
 const steps = [
   { id: 1, title: "Review Order", icon: ShoppingCart },
-  { id: 2, title: "Contact Info", icon: User },
-  { id: 3, title: "Sign Contract", icon: FileText },
+  { id: 2, title: "Sign Contract", icon: FileText },
+  { id: 3, title: "Contact Info", icon: User },
   { id: 4, title: "Payment", icon: CreditCard },
   { id: 5, title: "Complete", icon: Sparkles },
 ];
@@ -68,6 +68,11 @@ export default function CheckoutContent() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [contractId, setContractId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Debug currentStep changes
+  useEffect(() => {
+    console.log("📍 Current Step Changed:", currentStep);
+  }, [currentStep]);
   const [formData, setFormData] = useState({
     contactInfo: {
       name: mockUser.name || "",
@@ -115,6 +120,7 @@ export default function CheckoutContent() {
   };
 
   const updateContactInfo = (field: string, value: string) => {
+    console.log("📝 Updating contact info", { field, value });
     setFormData((prev) => ({
       ...prev,
       contactInfo: {
@@ -138,6 +144,7 @@ export default function CheckoutContent() {
   };
 
   const handleNext = () => {
+    console.log("🔵 HandleNext called", { currentStep, nextStep: currentStep + 1 });
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
@@ -168,6 +175,7 @@ export default function CheckoutContent() {
   const checkForExistingContract = async (cartData: CartItem[]) => {
     try {
       const contracts = await getUserContracts();
+      console.log("🔍 Checking existing contracts:", contracts);
 
       // Determine product type from cart data
       const firstItem = cartData[0];
@@ -195,10 +203,14 @@ export default function CheckoutContent() {
         }
       }
 
+      console.log("🎯 Looking for product type:", productType);
+
       // Look for any contract with this product type
       const existingContract = contracts.find(
         (contract: any) => contract.productType === productType
       );
+
+      console.log("📋 Found existing contract:", existingContract);
 
       if (existingContract) {
         // Check if it's an active completed subscription
@@ -231,7 +243,7 @@ export default function CheckoutContent() {
         ) {
           // Found an existing contract, skip to payment step
           setContractId(existingContract._id);
-          setCurrentStep(4); // Adjust to match new step index for payment
+          setCurrentStep(4); // Payment step in new order
 
           toast({
             title: "Existing Contract Found",
@@ -390,8 +402,13 @@ export default function CheckoutContent() {
     return "mentorship-package";
   };
 
-  const handleSignContract = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignContract = async () => {
+    console.log("🔵 Sign Contract button clicked", {
+      signature: !!signatureData.signature,
+      contractAccepted: formData.contractAccepted,
+      user: !!user,
+      contractId
+    });
 
     if (!signatureData.signature.trim()) {
       toast({
@@ -402,11 +419,25 @@ export default function CheckoutContent() {
       return;
     }
 
-    if (!user) {
+    if (!formData.contractAccepted) {
       toast({
-        title: "Authentication Required",
-        description: "Please login to continue",
+        title: "Agreement Required",
+        description: "Please accept the service agreement to continue",
         variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      // Guest user flow - proceed with guest contract creation
+      console.log("👤 Guest user detected, proceeding with guest contract");
+      
+      // For guest users, we'll create a contract without authentication
+      // but we need the contact info first, so let's move to step 3
+      setCurrentStep(3);
+      toast({
+        title: "Contact Information Required",
+        description: "Please provide your contact information to continue",
       });
       return;
     }
@@ -470,41 +501,54 @@ export default function CheckoutContent() {
       };
 
       const signedContract = await signContract(contractData);
-      setContractId(signedContract._id);
+      
+      console.log("✅ Authenticated user contract signed:", signedContract);
+      
+      // Set contract ID from response
+      const newContractId = signedContract._id;
+      setContractId(newContractId);
+      
+      console.log("📝 Setting contractId for authenticated user:", newContractId);
 
-      // Update step progress
-      setCurrentStep(4); // Move to Payment step (index 4 in the new flow)
-
-      // Check if this was an existing contract
+      // Update step progress based on contract status
       if (signedContract.isExisting) {
-        toast({
-          title: "Contract Ready",
-          description:
-            signedContract.status === "payment_pending"
-              ? "Your contract is signed and ready for payment."
-              : "Using your existing contract for this package. Proceeding to payment.",
-        });
+        // Existing contract - skip to payment
+        setCurrentStep(4); // Skip to Payment step for existing contracts
+        
+        if (signedContract.status === "payment_pending") {
+          toast({
+            title: "Contract Ready",
+            description: "Your contract is signed and ready for payment.",
+          });
+        } else {
+          toast({
+            title: "Contract Ready", 
+            description: "Using your existing contract for this package. Proceeding to payment.",
+          });
+        }
       } else {
+        // New contract - go to contact info
+        setCurrentStep(3); // Move to Contact Info step for new contracts
         toast({
           title: "Contract Signed Successfully",
-          description: "You can now proceed with payment",
+          description: "Please fill in your contact information to continue",
         });
       }
     } catch (error: any) {
       console.error("Contract signing error:", error);
 
       // Handle active subscription error
-      if (error.hasActiveSubscription) {
+      if (error.hasActiveSubscription || error.message === "You already have an active subscription for this product") {
         toast({
           title: "Active Subscription Found",
           description:
-            "You already have an active subscription for this product. Please check your subscription dashboard.",
+            "You already have an active subscription for this product. Redirecting to your subscription dashboard...",
           variant: "destructive",
         });
 
         // Redirect to subscription dashboard after a delay
         setTimeout(() => {
-          router.push("/hub/subscription");
+          router.push("/hub");
         }, 3000);
         return;
       }
@@ -514,12 +558,12 @@ export default function CheckoutContent() {
           error.message === "Contract already exists for this product" ||
           error.message === "Contract signed but payment pending") {
         
-        // Contract exists and is ready for payment, no error to show
+        // Contract exists and is ready for payment, skip to payment step
         if (error.existingContract) {
           setContractId(error.existingContract._id);
         }
         
-        setCurrentStep(4); // Move to Payment step (index 4 in the new flow)
+        setCurrentStep(4); // Move to Payment step for existing contracts
 
         toast({
           title: "Contract Ready",
@@ -533,6 +577,151 @@ export default function CheckoutContent() {
           variant: "destructive",
         });
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle guest contract signing after contact info is provided
+  const handleGuestContractSigning = async () => {
+    if (!signatureData.signature.trim()) {
+      toast({
+        title: "Signature Required", 
+        description: "Please go back and draw your digital signature",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.contractAccepted) {
+      toast({
+        title: "Agreement Required",
+        description: "Please accept the service agreement",
+        variant: "destructive", 
+      });
+      return;
+    }
+
+    if (!formData.contactInfo.name.trim() || !formData.contactInfo.email.trim()) {
+      toast({
+        title: "Contact Information Required",
+        description: "Please provide your name and email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log("🔵 Creating guest contract");
+      
+      // First, check if user already has contracts with this email
+      try {
+        const existingContractsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/contracts/public/my-contracts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.contactInfo.email,
+          }),
+        });
+        
+        if (existingContractsResponse.ok) {
+          const existingData = await existingContractsResponse.json();
+          console.log("📋 Existing contracts for email:", existingData.data);
+          
+          // Check if any existing contract is active for the same product type
+          const productType = getProductType();
+          const activeContract = existingData.data?.find((contract: any) => {
+            const isActiveSubscription = contract.status === "completed" && 
+              contract.subscriptionEndDate && 
+              new Date(contract.subscriptionEndDate) > new Date();
+            const isSameProduct = contract.productType === productType;
+            return isActiveSubscription && isSameProduct;
+          });
+          
+          if (activeContract) {
+            toast({
+              title: "Active Subscription Found",
+              description: "You already have an active subscription for this product with this email address.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (checkError) {
+        console.log("⚠️ Could not check existing contracts, proceeding...");
+      }
+      
+      const productType = getProductType();
+      
+      // Use the guest contract creation API endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/contracts/create-with-contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.contactInfo.name,
+          email: formData.contactInfo.email,
+          phone: formData.contactInfo.phone || "",
+          signature: signatureData.signature,
+          productType,
+          subscriptionType: "monthly",
+          amount: getTotalPrice(useMemberPrice),
+          contractData: {
+            name: formData.contactInfo.name,
+            email: formData.contactInfo.email,
+            date: new Date(),
+            signature: signatureData.signature,
+            price: getTotalPrice(useMemberPrice).toLocaleString(),
+            productName: cartItems[0]?.name || "Mentorship Package",
+          }
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create guest contract");
+      }
+
+      console.log("✅ Guest contract created successfully:", data);
+      
+      // Set contract ID from response
+      const newContractId = data.data.contractId || data.data.contract._id || data.contractId;
+      setContractId(newContractId);
+      
+      console.log("📝 Setting contractId:", newContractId);
+      
+      setCurrentStep(4); // Move to Payment step
+
+      toast({
+        title: "Contract Signed Successfully",
+        description: data.message || "You can now proceed with payment",
+      });
+
+    } catch (error: any) {
+      console.error("Guest contract creation error:", error);
+      
+      // Handle active subscription error for guest users
+      if (error.message === "You already have an active subscription for this product") {
+        toast({
+          title: "Active Subscription Found",
+          description:
+            "You already have an active subscription for this product. Please check your account or contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Contract Creation Failed",
+        description: error.message || "Failed to create contract",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -706,65 +895,8 @@ export default function CheckoutContent() {
             </div>
           )}
 
-          {/* Step 2: Read Contact */}
+          {/* Step 2: Sign Contract */}
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name" className="text-slate-300">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.contactInfo.name}
-                    onChange={(e) => updateContactInfo("name", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-slate-300">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.contactInfo.email}
-                    onChange={(e) => updateContactInfo("email", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your email"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone" className="text-slate-300">
-                    Phone Number
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={formData.contactInfo.phone}
-                    onChange={(e) => updateContactInfo("phone", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company" className="text-slate-300">
-                    Company (Optional)
-                  </Label>
-                  <Input
-                    id="company"
-                    value={formData.contactInfo.company}
-                    onChange={(e) => updateContactInfo("company", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your company name"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Sign Contract */}
-          {currentStep === 3 && (
             <div className="space-y-4">
               {(() => {
                 // Format the current date for all contracts
@@ -855,12 +987,13 @@ export default function CheckoutContent() {
                   Digital Signature
                 </Label>
                 <SignatureCanvas
-                  onSignatureChange={(signature) =>
+                  onSignatureChange={(signature) => {
+                    console.log("🖊️ Signature changed", { hasSignature: !!signature, length: signature?.length });
                     setSignatureData((prev) => ({
                       ...prev,
                       signature,
-                    }))
-                  }
+                    }));
+                  }}
                   className="bg-slate-700 border-slate-600 rounded-md min-h-[120px] w-full"
                 />
                 <p className="text-sm text-gray-400 mt-1">
@@ -873,12 +1006,72 @@ export default function CheckoutContent() {
                 <Checkbox
                   id="contract"
                   checked={formData.contractAccepted}
-                  onCheckedChange={(checked) => updateFormData("contractAccepted", checked)}
+                  onCheckedChange={(checked) => {
+                    console.log("✅ Checkbox changed", { checked });
+                    updateFormData("contractAccepted", checked);
+                  }}
                   className="bg-slate-700 border-slate-600 text-purple-500 focus:ring-purple-500"
                 />
                 <Label htmlFor="contract" className="text-slate-300">
                   I have read and agree to the service agreement
                 </Label>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Contact Info */}
+          {currentStep === 3 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-slate-300">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.contactInfo.name}
+                    onChange={(e) => updateContactInfo("name", e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-slate-300">
+                    Email Address
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.contactInfo.email}
+                    onChange={(e) => updateContactInfo("email", e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-slate-300">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData.contactInfo.phone}
+                    onChange={(e) => updateContactInfo("phone", e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="company" className="text-slate-300">
+                    Company (Optional)
+                  </Label>
+                  <Input
+                    id="company"
+                    value={formData.contactInfo.company}
+                    onChange={(e) => updateContactInfo("company", e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter your company name"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -898,48 +1091,39 @@ export default function CheckoutContent() {
                   onPaymentError={handlePaymentError}
                 />
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="cardNumber" className="text-slate-300">
-                      Card Number
-                    </Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      className="bg-slate-700 border-slate-600 text-white"
-                    />
+                <div className="text-center space-y-4">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6">
+                    <div className="flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-red-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">Contract Required</h3>
+                    <p className="text-slate-300 mb-4">
+                      {!user ? (
+                        "You need to complete the contract signing process before making a payment. Please go back to Step 2 and sign the contract, then provide your contact information."
+                      ) : (
+                        "Contract is required before payment. Please go back and complete the contract signing process."
+                      )}
+                    </p>
+                    <Button
+                      onClick={() => setCurrentStep(!user ? 2 : 3)}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    >
+                      {!user ? "Go to Contract Signing" : "Go to Contact Info"}
+                    </Button>
                   </div>
-                  <div>
-                    <Label htmlFor="cardName" className="text-slate-300">
-                      Cardholder Name
-                    </Label>
-                    <Input id="cardName" placeholder="John Doe" className="bg-slate-700 border-slate-600 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="expiry" className="text-slate-300">
-                      Expiry Date
-                    </Label>
-                    <Input id="expiry" placeholder="MM/YY" className="bg-slate-700 border-slate-600 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv" className="text-slate-300">
-                      CVV
-                    </Label>
-                    <Input id="cvv" placeholder="123" className="bg-slate-700 border-slate-600 text-white" />
+                  
+                  <div className="bg-slate-700/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">{cartItems[0]?.name || "Mentorship Package"} {useMemberPrice ? "(Member Price)" : "(Monthly)"}</span>
+                      <span className="text-white font-semibold">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-600">
+                      <span className="text-white font-semibold">Total</span>
+                      <span className="text-xl font-bold text-white">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               )}
-              
-              <div className="bg-slate-700/50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300">{cartItems[0]?.name || "Mentorship Package"} {useMemberPrice ? "(Member Price)" : "(Monthly)"}</span>
-                  <span className="text-white font-semibold">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-600">
-                  <span className="text-white font-semibold">Total</span>
-                  <span className="text-xl font-bold text-white">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
-                </div>
-              </div>
             </div>
           )}
 
@@ -972,15 +1156,69 @@ export default function CheckoutContent() {
 
             {currentStep < 5 ? (
               <Button
-                onClick={currentStep === 3 && contractId === "" ? handleSignContract : handleNext}
-                disabled={
-                  (currentStep === 2 && (!formData.contactInfo.name || !formData.contactInfo.email)) ||
-                  (currentStep === 3 && (!formData.contractAccepted || !signatureData.signature))
-                }
+                onClick={() => {
+                  console.log("🟡 Button clicked", {
+                    currentStep,
+                    contractId,
+                    willCallSignContract: currentStep === 2 && contractId === "",
+                    formData: formData.contractAccepted,
+                    signature: !!signatureData.signature,
+                    user: !!user
+                  });
+                  
+                  if (currentStep === 2 && contractId === "") {
+                    // Step 2: Sign Contract
+                    handleSignContract();
+                  } else if (currentStep === 3 && !user && contractId === "") {
+                    // Step 3: Guest user completing contact info - sign contract now
+                    handleGuestContractSigning();
+                  } else {
+                    // Regular next step
+                    handleNext();
+                  }
+                }}
+                disabled={(() => {
+                  // Simplified validation for debugging
+                  let disabled = false;
+                  
+                  if (currentStep === 2) {
+                    // Step 2: Sign Contract validation
+                    disabled = !formData.contractAccepted || !signatureData.signature || (contractId === "" && isLoading);
+                  } else if (currentStep === 3) {
+                    // Step 3: Contact Info validation
+                    disabled = !formData.contactInfo.name?.trim() || !formData.contactInfo.email?.trim();
+                    
+                    // For guest users, we also need signature and contract acceptance from step 2
+                    if (!user && contractId === "") {
+                      disabled = disabled || !formData.contractAccepted || !signatureData.signature || isLoading;
+                    }
+                  } else if (currentStep === 4) {
+                    // Step 4: Payment validation - contract must exist
+                    disabled = !contractId;
+                  }
+                  
+                  console.log("🔴 Button disabled calculation", {
+                    currentStep,
+                    disabled,
+                    contractAccepted: formData.contractAccepted,
+                    hasSignature: !!signatureData.signature,
+                    contactName: formData.contactInfo.name,
+                    contactEmail: formData.contactInfo.email,
+                    isLoading,
+                    contractId,
+                    isGuestUser: !user,
+                    isGuestStep3: currentStep === 3 && !user && contractId === ""
+                  });
+                  
+                  return disabled;
+                })()}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
               >
-                {currentStep === 3 && contractId === "" ? "Sign Contract" : 
-                 currentStep === 4 && contractId === "" ? "Complete Payment" : "Next"}
+                {isLoading ? "Processing..." :
+                 currentStep === 2 && contractId === "" ? "Sign Contract" :
+                 currentStep === 3 && !user && contractId === "" ? "Complete Contract & Continue" :
+                 currentStep === 4 && contractId === "" ? "Complete Contract First" :
+                 currentStep === 4 ? "Complete Payment" : "Next"}
               </Button>
             ) : (
               <Button
