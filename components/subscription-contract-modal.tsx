@@ -38,6 +38,14 @@ interface SubscriptionContractModalProps {
 interface SignatureData {
   name: string;
   email: string;
+  phone: string;
+  country: string;
+  streetAddress: string;
+  flatSuiteUnit: string;
+  townCity: string;
+  stateCounty: string;
+  postcodeZip: string;
+  discordUsername: string;
   signature: string;
 }
 
@@ -69,6 +77,14 @@ function SubscriptionContractModal({
   const [signatureData, setSignatureData] = useState<SignatureData>({
     name: "",
     email: "",
+    phone: "",
+    country: "",
+    streetAddress: "",
+    flatSuiteUnit: "",
+    townCity: "",
+    stateCounty: "",
+    postcodeZip: "",
+    discordUsername: "",
     signature: "",
   });
   const [paymentData, setPaymentData] = useState<PaymentData>({
@@ -93,7 +109,19 @@ function SubscriptionContractModal({
 
   const resetModal = () => {
     setCurrentStep(1);
-    setSignatureData({ name: "", email: "", signature: "" });
+    setSignatureData({ 
+      name: "", 
+      email: "", 
+      phone: "",
+      country: "",
+      streetAddress: "",
+      flatSuiteUnit: "",
+      townCity: "",
+      stateCounty: "",
+      postcodeZip: "",
+      discordUsername: "",
+      signature: "" 
+    });
     setContractId("");
     setExistingContract(null);
   };
@@ -143,6 +171,14 @@ function SubscriptionContractModal({
       const signedContractData: SignedContractData = {
         name: signatureData.name,
         email: signatureData.email,
+        phone: signatureData.phone,
+        country: signatureData.country,
+        streetAddress: signatureData.streetAddress,
+        flatSuiteUnit: signatureData.flatSuiteUnit,
+        townCity: signatureData.townCity,
+        stateCounty: signatureData.stateCounty,
+        postcodeZip: signatureData.postcodeZip,
+        discordUsername: signatureData.discordUsername,
         signature: signatureData.signature,
         productType: packageType,
         subscriptionType,
@@ -401,29 +437,127 @@ function SubscriptionContractModal({
                 <div className="bg-slate-700/50 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Contact Information & Signature</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <Label htmlFor="name" className="text-slate-300">Full Name *</Label>
-                      <Input
-                        id="name"
-                        value={signatureData.name}
-                        onChange={(e) => setSignatureData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter your full name"
-                        required
-                        className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
-                      />
+                  {/* Personal Information */}
+                  <div className="bg-slate-800/50 rounded-lg p-4 mb-6">
+                    <h4 className="text-md font-medium text-purple-300 mb-3">Personal Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name" className="text-slate-300">Full Name *</Label>
+                        <Input
+                          id="name"
+                          value={signatureData.name}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter your full name"
+                          required
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email" className="text-slate-300">Email Address *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={signatureData.email}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, email: e.target.value }))}
+                          placeholder="Enter your email address"
+                          required
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone" className="text-slate-300">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          value={signatureData.phone}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, phone: e.target.value }))}
+                          placeholder="Enter your phone number"
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="discordUsername" className="text-slate-300">Discord Username</Label>
+                        <Input
+                          id="discordUsername"
+                          value={signatureData.discordUsername}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, discordUsername: e.target.value }))}
+                          placeholder="username#1234"
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="email" className="text-slate-300">Email Address *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={signatureData.email}
-                        onChange={(e) => setSignatureData(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="Enter your email address"
-                        required
-                        className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
-                      />
+                  </div>
+
+                  {/* Address Information */}
+                  <div className="bg-slate-800/50 rounded-lg p-4 mb-6">
+                    <h4 className="text-md font-medium text-purple-300 mb-3">Address Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="country" className="text-slate-300">Country *</Label>
+                        <Input
+                          id="country"
+                          value={signatureData.country}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, country: e.target.value }))}
+                          placeholder="Enter your country"
+                          required
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="streetAddress" className="text-slate-300">Street Address *</Label>
+                        <Input
+                          id="streetAddress"
+                          value={signatureData.streetAddress}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, streetAddress: e.target.value }))}
+                          placeholder="Enter your street address"
+                          required
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="flatSuiteUnit" className="text-slate-300">Flat, Suite, Unit, etc. (Optional)</Label>
+                        <Input
+                          id="flatSuiteUnit"
+                          value={signatureData.flatSuiteUnit}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, flatSuiteUnit: e.target.value }))}
+                          placeholder="Apartment, suite, unit, building, floor, etc."
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="townCity" className="text-slate-300">Town/City *</Label>
+                          <Input
+                            id="townCity"
+                            value={signatureData.townCity}
+                            onChange={(e) => setSignatureData(prev => ({ ...prev, townCity: e.target.value }))}
+                            placeholder="Enter your city"
+                            required
+                            className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="stateCounty" className="text-slate-300">State/County *</Label>
+                          <Input
+                            id="stateCounty"
+                            value={signatureData.stateCounty}
+                            onChange={(e) => setSignatureData(prev => ({ ...prev, stateCounty: e.target.value }))}
+                            placeholder="Enter your state or county"
+                            required
+                            className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="postcodeZip" className="text-slate-300">Postcode/Zip *</Label>
+                        <Input
+                          id="postcodeZip"
+                          value={signatureData.postcodeZip}
+                          onChange={(e) => setSignatureData(prev => ({ ...prev, postcodeZip: e.target.value }))}
+                          placeholder="Enter your postal/zip code"
+                          required
+                          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -447,7 +581,9 @@ function SubscriptionContractModal({
                   </Button>
                   <Button 
                     onClick={handleSignContract}
-                    disabled={isLoading || !signatureData.name || !signatureData.email || !signatureData.signature}
+                    disabled={isLoading || !signatureData.name || !signatureData.email || !signatureData.signature || 
+                             !signatureData.country || !signatureData.streetAddress || !signatureData.townCity || 
+                             !signatureData.stateCounty || !signatureData.postcodeZip}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex-1"
                   >
                     {isLoading ? "Signing Contract..." : "Sign Contract & Continue"}

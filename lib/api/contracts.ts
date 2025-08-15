@@ -5,6 +5,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 export interface SignedContractData {
   name: string;
   email: string;
+  phone?: string;
+  country?: string;
+  streetAddress?: string;
+  flatSuiteUnit?: string;
+  townCity?: string;
+  stateCounty?: string;
+  postcodeZip?: string;
+  discordUsername?: string;
   signature: string;
   productType: string;
   subscriptionType?: "monthly" | "yearly";
@@ -30,6 +38,14 @@ export interface SignedContract {
   userId: string;
   name: string;
   email: string;
+  phone?: string;
+  country?: string;
+  streetAddress?: string;
+  flatSuiteUnit?: string;
+  townCity?: string;
+  stateCounty?: string;
+  postcodeZip?: string;
+  discordUsername?: string;
   signature: string;
   productType: string;
   signedDate: string;
@@ -47,6 +63,71 @@ export interface SignedContract {
   updatedAt: string;
   isExisting?: boolean;
 }
+
+// Create contract with contact info (for guest users)
+export interface CreateContractWithContactData {
+  fullName: string;
+  email: string;
+  phone?: string;
+  country: string;
+  streetAddress: string;
+  flatSuiteUnit?: string;
+  townCity: string;
+  stateCounty: string;
+  postcodeZip: string;
+  discordUsername?: string;
+  signature: string;
+  productType: string;
+  subscriptionType?: "monthly" | "yearly";
+  contractData?: any;
+}
+
+export const createContractWithContact = async (
+  contractData: CreateContractWithContactData
+): Promise<{
+  contract: SignedContract;
+  contractId: string;
+  message: string;
+  userCreationStatus: string;
+}> => {
+  const response = await fetch(`${API_URL}/contracts/create-with-contact`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(contractData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    // Handle validation errors
+    if (data.errors && Array.isArray(data.errors)) {
+      const error = new Error(data.message || "Validation failed") as any;
+      error.validationErrors = data.errors;
+      throw error;
+    }
+
+    // Handle active subscription error
+    if (
+      data.message ===
+      "You already have an active subscription for this product"
+    ) {
+      const error = new Error(data.message) as any;
+      error.hasActiveSubscription = true;
+      throw error;
+    }
+
+    throw new Error(data.message || "Failed to create contract");
+  }
+
+  return {
+    contract: data.data.contract,
+    contractId: data.data.contractId,
+    message: data.message,
+    userCreationStatus: data.data.userCreationStatus,
+  };
+};
 
 // Sign contract
 export const signContract = async (

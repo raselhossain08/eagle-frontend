@@ -1,4 +1,43 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 export function TechnologyPreview() {
+  const router = useRouter();
+
+  const handleExploreScripts = () => {
+    try {
+      router.push('/scripts');
+    } catch (error) {
+      console.error('Error navigating to scripts:', error);
+    }
+  };
+
+  const handleGetInfinityAccess = () => {
+    try {
+      const cartItem = {
+        id: 'upgrade-infinity',
+        name: 'Infinity Package',
+        price: 999,
+        originalPrice: 999,
+        type: 'subscription-infinity',
+        description: 'Complete access to all trading tools and scripts',
+      };
+      localStorage.setItem('cart', JSON.stringify([cartItem]));
+      router.push('/checkout');
+    } catch (error) {
+      console.error('Error purchasing Infinity:', error);
+    }
+  };
+
+  const handleViewAllScripts = () => {
+    try {
+      router.push('/scripts');
+    } catch (error) {
+      console.error('Error navigating to all scripts:', error);
+    }
+  };
+
   return (
     <div className="bg-slate-900 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -131,7 +170,10 @@ export function TechnologyPreview() {
                   <li>One-time purchase</li>
                 </ul>
                 <div className="mt-4">
-                  <button className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                  <button 
+                    onClick={handleExploreScripts}
+                    className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                  >
                     Explore Scripts
                   </button>
                 </div>
@@ -151,7 +193,10 @@ export function TechnologyPreview() {
                   <li>Regular updates</li>
                 </ul>
                 <div className="mt-4">
-                  <button className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50">
+                  <button 
+                    onClick={handleGetInfinityAccess}
+                    className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50"
+                  >
                     Get Infinity Access
                   </button>
                 </div>
@@ -167,7 +212,10 @@ export function TechnologyPreview() {
           <p className="mt-2 text-gray-300">
             Discover a growing library of scripts designed to streamline your workflows.
           </p>
-          <button className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded">
+          <button 
+            onClick={handleViewAllScripts}
+            className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded"
+          >
             View All Scripts
           </button>
         </div>

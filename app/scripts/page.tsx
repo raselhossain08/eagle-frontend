@@ -1,0 +1,370 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Code,
+  TrendingUp,
+  Target,
+  Clock,
+  Activity,
+  BarChart3,
+  Brain,
+  ArrowLeft,
+  Download,
+  Play,
+  Star,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+
+const TRADING_SCRIPTS = [
+  {
+    id: 'eagle-algo-contrarian',
+    name: 'Eagle Algo Contrarian',
+    price: 47,
+    category: 'Momentum',
+    description: 'Advanced momentum indicators with contrarian signals for market reversals',
+    features: [
+      'Advanced momentum analysis',
+      'Contrarian signal detection',
+      'Multi-timeframe compatibility',
+      'Risk management built-in'
+    ],
+    image: '/script-example-btc.png',
+    rating: 4.8,
+    downloads: '2.3k+'
+  },
+  {
+    id: 'swing-king',
+    name: 'Swing King',
+    price: 47,
+    category: 'Swing Trading',
+    description: 'Optimal swing trading setups with precise entry and exit points',
+    features: [
+      'Swing pattern recognition',
+      'Entry/exit optimization',
+      'Support/resistance levels',
+      'Trend confirmation signals'
+    ],
+    image: '/swing-king-meta-chart.png',
+    rating: 4.9,
+    downloads: '1.8k+'
+  },
+  {
+    id: 'momentum-scalper',
+    name: 'Momentum Scalper',
+    price: 47,
+    category: 'Scalping',
+    description: 'High-frequency scalping signals for quick profit opportunities',
+    features: [
+      'High-frequency signals',
+      'Quick profit targeting',
+      'Low latency execution',
+      'Real-time market scanning'
+    ],
+    image: '/script-example-hood.png',
+    rating: 4.7,
+    downloads: '3.1k+'
+  },
+  {
+    id: 'trend-master',
+    name: 'Trend Master Pro',
+    price: 47,
+    category: 'Trend Following',
+    description: 'Professional trend following system with dynamic position sizing',
+    features: [
+      'Trend identification',
+      'Dynamic position sizing',
+      'Breakout detection',
+      'Trailing stop management'
+    ],
+    image: '/script-example-msft.png',
+    rating: 4.6,
+    downloads: '1.5k+'
+  },
+  {
+    id: 'options-flow',
+    name: 'Options Flow Scanner',
+    price: 47,
+    category: 'Options',
+    description: 'Real-time options flow analysis and unusual activity detection',
+    features: [
+      'Options flow monitoring',
+      'Unusual activity alerts',
+      'Volume spike detection',
+      'Dark pool integration'
+    ],
+    image: '/contrarian-tsla-ibit-chart.png',
+    rating: 4.8,
+    downloads: '2.7k+'
+  },
+  {
+    id: 'crypto-beast',
+    name: 'Crypto Beast',
+    price: 47,
+    category: 'Cryptocurrency',
+    description: 'Specialized cryptocurrency trading signals with volatility management',
+    features: [
+      'Crypto-specific indicators',
+      'Volatility management',
+      '24/7 market coverage',
+      'DeFi protocol integration'
+    ],
+    image: '/script-example-btc.png',
+    rating: 4.5,
+    downloads: '2.9k+'
+  }
+];
+
+const CATEGORIES = ['All', 'Momentum', 'Swing Trading', 'Scalping', 'Trend Following', 'Options', 'Cryptocurrency'];
+
+export default function ScriptsPage() {
+  const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedScript, setSelectedScript] = useState<string | null>(null);
+
+  const filteredScripts = selectedCategory === 'All' 
+    ? TRADING_SCRIPTS 
+    : TRADING_SCRIPTS.filter(script => script.category === selectedCategory);
+
+  const handlePurchaseScript = (script: any) => {
+    try {
+      const cartItem = {
+        id: script.id,
+        name: script.name,
+        price: script.price,
+        originalPrice: script.price,
+        description: script.description,
+        type: "script-purchase"
+      };
+      
+      localStorage.setItem('cart', JSON.stringify([cartItem]));
+      router.push('/checkout');
+    } catch (error) {
+      console.error('Error purchasing script:', error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-eagle-background">
+      <Header />
+
+      {/* Header Section */}
+      <section className="relative py-16 px-4">
+        <div className="container mx-auto">
+          <div className="flex items-center mb-6">
+            <Button 
+              onClick={() => router.back()}
+              variant="ghost"
+              className="mr-4 text-eagle-foreground hover:bg-eagle-secondary/20"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-4xl font-bold text-eagle-foreground mb-2">
+                Trading Scripts Library
+              </h1>
+              <p className="text-xl text-eagle-muted-foreground">
+                Professional algorithmic trading scripts for every strategy
+              </p>
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {CATEGORIES.map((category) => (
+              <Button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className={`${
+                  selectedCategory === category 
+                    ? "bg-eagle-primary hover:bg-eagle-primary/90 text-eagle-primary-foreground" 
+                    : "border-eagle-border text-eagle-muted-foreground hover:bg-eagle-secondary/20"
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Scripts Grid */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredScripts.map((script) => (
+              <Card 
+                key={script.id}
+                className="bg-eagle-card border-eagle-border hover:border-eagle-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-eagle-primary/10 overflow-hidden"
+              >
+                <div className="relative">
+                  <img
+                    src={script.image}
+                    alt={`${script.name} Preview`}
+                    className="w-full h-48 object-cover"
+                  />
+                  <Badge 
+                    className="absolute top-2 right-2 bg-eagle-primary/20 text-eagle-primary border-eagle-primary/30"
+                  >
+                    {script.category}
+                  </Badge>
+                </div>
+                
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-xl text-eagle-card-foreground mb-1">
+                        {script.name}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <span className="text-yellow-400 text-sm ml-1">
+                            {script.rating}
+                          </span>
+                        </div>
+                        <span className="text-eagle-muted-foreground text-sm">
+                          {script.downloads} downloads
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-eagle-primary">
+                        ${script.price}
+                      </div>
+                      <div className="text-xs text-eagle-muted-foreground">
+                        per month
+                      </div>
+                    </div>
+                  </div>
+                  <CardDescription className="text-eagle-muted-foreground">
+                    {script.description}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold text-eagle-card-foreground mb-2">
+                      Key Features:
+                    </h4>
+                    <ul className="space-y-1">
+                      {script.features.map((feature, index) => (
+                        <li key={index} className="flex items-center text-sm text-eagle-muted-foreground">
+                          <div className="w-1.5 h-1.5 bg-eagle-primary rounded-full mr-2" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <Button
+                      onClick={() => handlePurchaseScript(script)}
+                      className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-eagle-primary-foreground font-semibold"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Purchase Script
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full border-eagle-border text-eagle-muted-foreground hover:bg-eagle-secondary/20"
+                      onClick={() => setSelectedScript(selectedScript === script.id ? null : script.id)}
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      {selectedScript === script.id ? 'Hide' : 'View'} Demo
+                    </Button>
+                  </div>
+
+                  {selectedScript === script.id && (
+                    <div className="mt-4 p-3 bg-eagle-secondary/50 rounded-lg border border-eagle-border">
+                      <p className="text-sm text-eagle-muted-foreground mb-2">
+                        🎥 Demo video and live performance metrics would be displayed here.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="text-eagle-muted-foreground">Win Rate:</span>
+                          <span className="text-green-400 ml-1 font-semibold">73%</span>
+                        </div>
+                        <div>
+                          <span className="text-eagle-muted-foreground">Avg Return:</span>
+                          <span className="text-eagle-primary ml-1 font-semibold">+2.4%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {filteredScripts.length === 0 && (
+            <div className="text-center py-12">
+              <Code className="w-16 h-16 text-eagle-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl text-eagle-muted-foreground mb-2">No scripts found</h3>
+              <p className="text-eagle-muted-foreground/70">
+                No scripts match your selected category. Try selecting a different category.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 px-4 bg-eagle-secondary/30">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-bold text-eagle-foreground mb-4">
+            Need All Scripts?
+          </h2>
+          <p className="text-xl text-eagle-muted-foreground mb-8 max-w-2xl mx-auto">
+            Get unlimited access to all trading scripts with our Infinity package
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={() => {
+                const cartItem = {
+                  id: 'upgrade-infinity',
+                  name: 'Infinity Package',
+                  price: 999,
+                  originalPrice: 999,
+                  type: 'subscription-infinity',
+                  description: 'Complete access to all trading tools and scripts',
+                };
+                localStorage.setItem('cart', JSON.stringify([cartItem]));
+                router.push('/checkout');
+              }}
+              size="lg"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-eagle-primary-foreground font-semibold px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              Get Infinity Package - $999/month
+            </Button>
+            <Link href="/technology">
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 py-4 border-eagle-border text-eagle-muted-foreground hover:bg-eagle-secondary/20"
+              >
+                Back to Technology
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}

@@ -30,7 +30,7 @@ export function DisclosureTooltip({ trigger, content, className = "" }: Disclosu
           <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 shadow-2xl max-w-sm w-max">
             <div className="flex items-start space-x-2">
               <Info className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
-              <p className="text-gray-200 text-sm leading-relaxed">{content}</p>
+              <span className="text-gray-200 text-sm leading-relaxed">{content}</span>
             </div>
             {/* Arrow pointing down */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2">
