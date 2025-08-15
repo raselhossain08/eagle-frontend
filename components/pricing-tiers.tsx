@@ -99,7 +99,8 @@ export function PricingTiers() {
     const subscriptionItem = {
       id: tier.name.toLowerCase(),
       name: `${tier.name} ${isAnnual ? "Annual" : "Monthly"} Subscription`,
-      price: isAnnual
+      price: isAnnual ? tier.annualPrice : tier.price,
+      originalPrice: isAnnual
         ? tier.annualOriginalPrice || tier.annualPrice
         : tier.originalPrice || tier.price,
       memberPrice: isAnnual ? tier.annualPrice : tier.price,

@@ -160,10 +160,12 @@ export default function CheckoutContent() {
     const savedCart = localStorage.getItem("cart");
 
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+      const cartData = JSON.parse(savedCart);
+      console.log("🛒 Cart Data Loaded:", cartData);
+      setCartItems(cartData);
 
       // Check for existing contracts that might be pending payment
-      checkForExistingContract(JSON.parse(savedCart));
+      checkForExistingContract(cartData);
     } else {
       // If no cart data, redirect back
       router.push("/advising");
@@ -261,22 +263,120 @@ export default function CheckoutContent() {
   const useMemberPrice = currentSubscription !== "None";
 
   const getTotalPrice = (useMemberPrice: boolean = false) => {
+    console.log("💰 Calculating Price:", { useMemberPrice, cartItems });
     return cartItems.reduce((total: number, item: CartItem) => {
-      let priceValue =
-        useMemberPrice && item.memberPrice ? item.memberPrice : item.price;
+      let priceValue = useMemberPrice && item.memberPrice ? item.memberPrice : item.price;
+      console.log("📊 Item Price Calculation:", { 
+        itemName: item.name,
+        itemPrice: item.price, 
+        memberPrice: item.memberPrice, 
+        originalPrice: item.originalPrice,
+        useMemberPrice,
+        selectedPriceValue: priceValue 
+      });
 
-      // Handle both string and number types
-      if (typeof priceValue === "string") {
-        priceValue = parseFloat(priceValue.replace(/[,$]/g, ""));
-      } else if (typeof priceValue === "number") {
-        priceValue = priceValue;
-      } else {
-        priceValue = 0;
+      // Parse current price first
+      let currentPrice = 0;
+      if (typeof item.price === "string") {
+        currentPrice = parseFloat(item.price.replace(/[$,]/g, ""));
+      } else if (typeof item.price === "number") {
+        currentPrice = item.price;
       }
+
+      // Apply discount if original price exists
+      if (item.originalPrice && !useMemberPrice) {
+        // Parse original price
+        const originalPriceStr = String(item.originalPrice);
+        const originalPrice = parseFloat(originalPriceStr.replace(/[$,]/g, ""));
+        
+        console.log("🏷️ Discount Check:", { 
+          originalPrice, 
+          currentPrice, 
+          willUseDiscount: currentPrice < originalPrice,
+          originalPriceStr,
+          currentPriceStr: String(item.price)
+        });
+
+        // Use the discounted price if it's lower than original
+        priceValue = currentPrice < originalPrice ? currentPrice : originalPrice;
+      } else {
+        // Handle member price or regular pricing
+        if (typeof priceValue === "string") {
+          priceValue = parseFloat(priceValue.replace(/[$,]/g, ""));
+        } else if (typeof priceValue === "number") {
+          priceValue = priceValue;
+        } else {
+          priceValue = 0;
+        }
+      }
+
+      console.log("💲 Final Price Value for Item:", { itemName: item.name, finalPriceValue: priceValue });
 
       const quantity = item.quantity || 1;
       return total + priceValue * quantity;
     }, 0);
+  };
+
+  // Get original price (before discount) for display
+  const getOriginalPrice = () => {
+    return cartItems.reduce((total: number, item: CartItem) => {
+      if (item.originalPrice) {
+        const originalPriceStr = String(item.originalPrice);
+        const originalPrice = parseFloat(originalPriceStr.replace(/[$,]/g, ""));
+        const quantity = item.quantity || 1;
+        return total + originalPrice * quantity;
+      } else {
+        // If no original price, use current price
+        const currentPriceStr = String(item.price);
+        const currentPrice = parseFloat(currentPriceStr.replace(/[$,]/g, ""));
+        const quantity = item.quantity || 1;
+        return total + currentPrice * quantity;
+      }
+    }, 0);
+  };
+
+  // Check if any item has discount
+  const hasDiscount = () => {
+    const result = cartItems.some(item => {
+      if (!item.originalPrice) return false;
+      
+      // Parse original price
+      const originalPriceStr = String(item.originalPrice);
+      const originalPrice = parseFloat(originalPriceStr.replace(/[$,]/g, ""));
+      
+      // Parse current price
+      const currentPriceStr = String(item.price);
+      const currentPrice = parseFloat(currentPriceStr.replace(/[$,]/g, ""));
+      
+      console.log("🔍 Discount Detection:", { 
+        itemName: item.name,
+        originalPriceStr,
+        currentPriceStr,
+        originalPrice, 
+        currentPrice, 
+        hasDiscount: originalPrice > currentPrice 
+      });
+      
+      return originalPrice > currentPrice;
+    });
+    
+    console.log("🎯 Final Discount Status:", result);
+    return result;
+  };
+
+  // Calculate total savings
+  const getTotalSavings = () => {
+    if (!hasDiscount()) return 0;
+    return getOriginalPrice() - getTotalPrice(false);
+  };
+
+  // Calculate discount percentage
+  const getDiscountPercentage = () => {
+    if (!hasDiscount()) return 0;
+    const original = getOriginalPrice();
+    const current = getTotalPrice(false);
+    if (original === 0) return 0;
+    return Math.round(((original - current) / original) * 100);
   };
 
   const getTotalItems = () => {
@@ -840,16 +940,33 @@ export default function CheckoutContent() {
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300">Total:</span>
                     <div className="text-right">
-                      {useMemberPrice && (
+                      {/* Show original price if discount exists */}
+                      {hasDiscount() && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm text-slate-400 line-through">
+                            ${getOriginalPrice().toLocaleString()}
+                          </span>
+                          <Badge className="bg-red-500/20 text-red-400 text-xs">
+                            Save {getDiscountPercentage()}%
+                          </Badge>
+                        </div>
+                      )}
+                      {/* Show member price discount if applicable and no regular discount */}
+                      {useMemberPrice && !hasDiscount() && (
                         <div className="text-sm text-slate-400 line-through">
                           ${getTotalPrice(false).toLocaleString()}
                         </div>
                       )}
                       <span className="text-2xl font-bold text-white">
                         ${getTotalPrice(useMemberPrice).toLocaleString()}
-                        {useMemberPrice && (
+                        {useMemberPrice && !hasDiscount() && (
                           <Badge className="ml-2 bg-green-500/20 text-green-400">
                             Member Price
+                          </Badge>
+                        )}
+                        {hasDiscount() && (
+                          <Badge className="ml-2 bg-green-500/20 text-green-400">
+                            ${getTotalSavings().toLocaleString()} Off
                           </Badge>
                         )}
                       </span>
@@ -1079,8 +1196,29 @@ export default function CheckoutContent() {
                   
                   <div className="bg-slate-700/50 rounded-lg p-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-300">{cartItems[0]?.name || "Mentorship Package"} {useMemberPrice ? "(Member Price)" : "(Monthly)"}</span>
-                      <span className="text-white font-semibold">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
+                      <span className="text-slate-300">
+                        {cartItems[0]?.name || "Mentorship Package"} 
+                        {hasDiscount() ? " (Discounted)" : useMemberPrice ? " (Member Price)" : " (Monthly)"}
+                      </span>
+                      <div className="text-right">
+                        {/* Show original price if discount exists */}
+                        {hasDiscount() && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm text-slate-400 line-through">
+                              ${getOriginalPrice().toLocaleString()}
+                            </span>
+                            <Badge className="bg-red-500/20 text-red-400 text-xs">
+                              {getDiscountPercentage()}% OFF
+                            </Badge>
+                          </div>
+                        )}
+                        <span className="text-white font-semibold">${getTotalPrice(useMemberPrice).toLocaleString()}</span>
+                        {hasDiscount() && (
+                          <div className="text-xs text-green-400 mt-1">
+                            You save ${getTotalSavings().toLocaleString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-600">
                       <span className="text-white font-semibold">Total</span>

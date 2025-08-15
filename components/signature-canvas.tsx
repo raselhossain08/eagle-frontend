@@ -14,7 +14,7 @@ interface SignatureCanvasProps {
 
 export default function SignatureCanvas({
   onSignatureChange,
-  width = 400,
+  width = 800,
   height = 200,
   className = "",
 }: SignatureCanvasProps) {
@@ -29,8 +29,13 @@ export default function SignatureCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Get the container width and use it for responsive sizing
+    const container = canvas.parentElement;
+    const containerWidth = container?.clientWidth || width;
+    const actualWidth = Math.min(containerWidth - 16, width); // 16px for padding
+
     // Set canvas size
-    canvas.width = width;
+    canvas.width = actualWidth;
     canvas.height = height;
 
     // Set drawing styles
@@ -41,8 +46,41 @@ export default function SignatureCanvas({
 
     // Fill with white background
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
-  }, [width, height]);
+    ctx.fillRect(0, 0, actualWidth, height);
+
+    // Handle window resize for responsiveness
+    const handleResize = () => {
+      const newContainer = canvas.parentElement;
+      const newContainerWidth = newContainer?.clientWidth || width;
+      const newActualWidth = Math.min(newContainerWidth - 16, width);
+      
+      if (newActualWidth !== canvas.width) {
+        canvas.width = newActualWidth;
+        canvas.height = height;
+        
+        // Reset drawing styles after resize
+        const newCtx = canvas.getContext("2d");
+        if (newCtx) {
+          newCtx.strokeStyle = "#000000";
+          newCtx.lineWidth = 2;
+          newCtx.lineCap = "round";
+          newCtx.lineJoin = "round";
+          newCtx.fillStyle = "#ffffff";
+          newCtx.fillRect(0, 0, newActualWidth, height);
+        }
+        
+        // Clear signature on resize
+        setIsEmpty(true);
+        onSignatureChange("");
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [width, height, onSignatureChange]);
 
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
@@ -122,7 +160,7 @@ export default function SignatureCanvas({
     if (!ctx) return;
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     setIsEmpty(true);
     onSignatureChange("");
   };

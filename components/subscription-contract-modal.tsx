@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, FileText, Pen, CreditCard } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, FileText, Pen, CreditCard, ShoppingCart, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PaymentMethodSelector } from "@/components/payment-method-selector";
 import {
@@ -46,7 +47,15 @@ interface PaymentData {
   subscriptionType: "monthly" | "yearly";
 }
 
-type Step = "contract" | "signature" | "payment" | "complete";
+type Step = "review" | "contract" | "signature" | "payment" | "complete";
+
+const steps = [
+  { id: 1, title: "Review Package", icon: ShoppingCart, key: "review" },
+  { id: 2, title: "Sign Contract", icon: FileText, key: "contract" },
+  { id: 3, title: "Contact Info", icon: Pen, key: "signature" },
+  { id: 4, title: "Payment", icon: CreditCard, key: "payment" },
+  { id: 5, title: "Complete", icon: Sparkles, key: "complete" },
+];
 
 function SubscriptionContractModal({
   isOpen,
@@ -56,7 +65,7 @@ function SubscriptionContractModal({
   onPaymentSuccess,
   upgradeMode = false,
 }: SubscriptionContractModalProps) {
-  const [step, setStep] = useState<Step>("contract");
+  const [currentStep, setCurrentStep] = useState(1);
   const [signatureData, setSignatureData] = useState<SignatureData>({
     name: "",
     email: "",
@@ -71,8 +80,19 @@ function SubscriptionContractModal({
   const [contractId, setContractId] = useState<string>("");
   const [existingContract, setExistingContract] = useState<any>(null);
 
+  // Helper function to get package price
+  const getPackagePrice = () => {
+    const prices = {
+      diamond: subscriptionType === 'monthly' ? 200 : 2000,
+      script: subscriptionType === 'monthly' ? 50 : 500,
+      infinity: subscriptionType === 'monthly' ? 100 : 1000,
+      basic: subscriptionType === 'monthly' ? 25 : 250
+    };
+    return prices[packageType as keyof typeof prices] || 97;
+  };
+
   const resetModal = () => {
-    setStep("contract");
+    setCurrentStep(1);
     setSignatureData({ name: "", email: "", signature: "" });
     setContractId("");
     setExistingContract(null);
@@ -99,7 +119,7 @@ function SubscriptionContractModal({
         setExistingContract(existing);
         setContractId(existing._id);
         // For existing contracts, skip to payment
-        setStep("payment");
+        setCurrentStep(4);
       }
     } catch (error) {
       // If there's an error fetching contracts, just proceed normally
@@ -144,7 +164,7 @@ function SubscriptionContractModal({
         });
       }
 
-      setStep("payment");
+      setCurrentStep(4); // Payment step
     } catch (error: any) {
       console.error("Error signing contract:", error);
 
@@ -157,7 +177,7 @@ function SubscriptionContractModal({
           title: "Contract Found",
           description: "Using your existing contract. Proceeding to payment.",
         });
-        setStep("payment");
+        setCurrentStep(4);
         return;
       }
 
@@ -184,7 +204,7 @@ function SubscriptionContractModal({
   };
 
   const handlePaymentSuccess = (data: any) => {
-    setStep("complete");
+    setCurrentStep(5);
     toast({
       title: "Payment Successful!",
       description: "Your subscription is now active.",
@@ -219,195 +239,285 @@ function SubscriptionContractModal({
     }
   };
 
-  const getStepIcon = (stepName: Step, currentStep: Step, completedSteps: Step[]) => {
-    if (completedSteps.includes(stepName) || (currentStep === "complete" && stepName !== "complete")) {
-      return <CheckCircle className="h-5 w-5 text-green-500" />;
-    }
-    
-    if (currentStep === stepName) {
-      return getDefaultIcon(stepName, "text-blue-500");
-    }
-    
-    return getDefaultIcon(stepName, "text-gray-400");
-  };
-
-  const getDefaultIcon = (stepName: Step, className: string) => {
-    switch (stepName) {
-      case "contract":
-        return <FileText className={`h-5 w-5 ${className}`} />;
-      case "signature":
-        return <Pen className={`h-5 w-5 ${className}`} />;
-      case "payment":
-        return <CreditCard className={`h-5 w-5 ${className}`} />;
-      case "complete":
-        return <CheckCircle className={`h-5 w-5 ${className}`} />;
-      default:
-        return <FileText className={`h-5 w-5 ${className}`} />;
-    }
-  };
-
-  const completedSteps: Step[] = [];
-  if (step === "signature" || step === "payment" || step === "complete") {
-    completedSteps.push("contract");
-  }
-  if (step === "payment" || step === "complete") {
-    completedSteps.push("signature");
-  }
-  if (step === "complete") {
-    completedSteps.push("payment");
-  }
+  const currentStepData = steps.find(step => step.id === currentStep);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-center">
-            {upgradeMode ? "Upgrade Subscription" : "Subscribe to"} {packageType.charAt(0).toUpperCase() + packageType.slice(1)} Plan
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-700 text-white">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-2xl text-center text-white">
+            {upgradeMode ? "Upgrade to" : "Subscribe to"} {packageType.charAt(0).toUpperCase() + packageType.slice(1)} Plan
           </DialogTitle>
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center space-x-8 mb-6">
-          <div className="flex items-center space-x-2">
-            {getStepIcon("contract", step, completedSteps)}
-            <span className={`text-sm ${step === "contract" ? "text-blue-500 font-medium" : completedSteps.includes("contract") ? "text-green-500" : "text-gray-400"}`}>
-              Review Contract
-            </span>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isCompleted = currentStep > step.id;
+              const isCurrent = currentStep === step.id;
+
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                      isCompleted
+                        ? "bg-gradient-to-r from-purple-500 to-pink-500 border-purple-500 text-white"
+                        : isCurrent
+                          ? "border-purple-500 text-purple-400 bg-purple-500/10"
+                          : "border-slate-600 text-slate-400"
+                    }`}
+                  >
+                    {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`w-12 h-0.5 mx-2 ${
+                        isCompleted ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-slate-600"
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div className="flex items-center space-x-2">
-            {getStepIcon("signature", step, completedSteps)}
-            <span className={`text-sm ${step === "signature" ? "text-blue-500 font-medium" : completedSteps.includes("signature") ? "text-green-500" : "text-gray-400"}`}>
-              Sign Contract
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {getStepIcon("payment", step, completedSteps)}
-            <span className={`text-sm ${step === "payment" ? "text-blue-500 font-medium" : completedSteps.includes("payment") ? "text-green-500" : "text-gray-400"}`}>
-              Payment
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {getStepIcon("complete", step, completedSteps)}
-            <span className={`text-sm ${step === "complete" ? "text-green-500 font-medium" : "text-gray-400"}`}>
-              Complete
-            </span>
+          <div className="flex justify-between text-xs">
+            {steps.map((step) => (
+              <span key={step.id} className={`${currentStep >= step.id ? "text-purple-400" : "text-slate-400"} text-center max-w-[80px]`}>
+                {step.title}
+              </span>
+            ))}
           </div>
         </div>
 
         {/* Step Content */}
-        {step === "contract" && (
-          <div>
-            <Card className="mb-4">
-              <CardContent className="p-6">
-                {getContractComponent()}
-              </CardContent>
-            </Card>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={() => setStep("signature")}>
-                I Agree - Continue to Sign
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
+        <Card className="bg-slate-900 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              {currentStepData && (
+                <>
+                  <currentStepData.icon className="w-6 h-6 text-purple-400" />
+                  Step {currentStep}: {currentStepData.title}
+                </>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Step 1: Review Package */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <div className="bg-slate-700/50 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold text-white">
+                      {packageType.charAt(0).toUpperCase() + packageType.slice(1)} Subscription
+                    </h3>
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      Premium Package
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-3 text-slate-300 mb-6">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>Premium market analysis and insights</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>Exclusive investment opportunities</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>Advanced trading strategies</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>Personalized portfolio recommendations</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>24/7 premium support</span>
+                    </div>
+                  </div>
 
-        {step === "signature" && (
-          <div>
-            <div className="space-y-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    value={signatureData.name}
-                    onChange={(e) => setSignatureData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter your full name"
-                    required
-                  />
+                  <div className="border-t border-slate-600 pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">Subscription Type:</span>
+                      <span className="text-white font-semibold capitalize">{subscriptionType}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-slate-300">Total:</span>
+                      <span className="text-2xl font-bold text-white">
+                        ${getPackagePrice().toLocaleString()}
+                        <span className="text-sm text-slate-400 ml-1">
+                          /{subscriptionType === "yearly" ? "year" : "month"}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={signatureData.email}
-                    onChange={(e) => setSignatureData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter your email address"
-                    required
-                  />
+
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={onClose} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrentStep(2)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex-1"
+                  >
+                    Continue to Contract
+                  </Button>
                 </div>
               </div>
+            )}
 
-              <div>
-                <Label>Digital Signature *</Label>
-                <div className="mt-2">
-                  <SignatureCanvas
-                    onSignatureChange={(signature) => 
-                      setSignatureData(prev => ({ ...prev, signature }))
-                    }
-                    width={400}
-                    height={200}
-                  />
+            {/* Step 2: Sign Contract */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <div className="bg-slate-700/50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Contract Agreement</h3>
+                  <div className="max-h-64 overflow-y-auto bg-slate-800 p-4 rounded border border-slate-600">
+                    {getContractComponent()}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setCurrentStep(1)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrentStep(3)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex-1"
+                  >
+                    I Agree - Continue to Sign
+                  </Button>
                 </div>
               </div>
-            </div>
+            )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setStep("contract")}>
-                Back
-              </Button>
-              <Button 
-                onClick={handleSignContract}
-                disabled={isLoading || !signatureData.name || !signatureData.email || !signatureData.signature}
-              >
-                {isLoading ? "Signing..." : "Sign Contract"}
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
+            {/* Step 3: Contact Info & Signature */}
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                <div className="bg-slate-700/50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Contact Information & Signature</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <Label htmlFor="name" className="text-slate-300">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={signatureData.name}
+                        onChange={(e) => setSignatureData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter your full name"
+                        required
+                        className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email" className="text-slate-300">Email Address *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={signatureData.email}
+                        onChange={(e) => setSignatureData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Enter your email address"
+                        required
+                        className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
 
-        {step === "payment" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Payment Details</h3>
-              <p className="text-gray-600">
-                Complete your payment to activate your {packageType} subscription.
-              </p>
-            </div>
+                  <div>
+                    <Label className="text-slate-300">Digital Signature *</Label>
+                    <div className="mt-2 bg-slate-800 p-2 rounded border border-slate-600">
+                      <SignatureCanvas
+                        onSignatureChange={(signature) => 
+                          setSignatureData(prev => ({ ...prev, signature }))
+                        }
+                        width={400}
+                        height={200}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-            <PaymentMethodSelector
-              amount={paymentData.amount.toString()}
-              subscriptionType={subscriptionType}
-              contractId={contractId}
-              productName={`${packageType.charAt(0).toUpperCase() + packageType.slice(1)} Subscription`}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setCurrentStep(2)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleSignContract}
+                    disabled={isLoading || !signatureData.name || !signatureData.email || !signatureData.signature}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex-1"
+                  >
+                    {isLoading ? "Signing Contract..." : "Sign Contract & Continue"}
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
+            {/* Step 4: Payment */}
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <div className="bg-slate-700/50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-white mb-2">Complete Your Payment</h3>
+                  <p className="text-slate-300 mb-4">
+                    Complete your payment to activate your {packageType} subscription.
+                  </p>
+                  
+                  <div className="bg-slate-800 p-4 rounded border border-slate-600 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">Package:</span>
+                      <span className="text-white font-medium">{packageType.charAt(0).toUpperCase() + packageType.slice(1)} Subscription</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-slate-300">Billing:</span>
+                      <span className="text-white font-medium capitalize">{subscriptionType}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-slate-300">Total:</span>
+                      <span className="text-xl font-bold text-white">${getPackagePrice().toLocaleString()}</span>
+                    </div>
+                  </div>
 
-        {step === "complete" && (
-          <div className="text-center py-8">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold text-green-600 mb-2">
-              Subscription Activated!
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Welcome to {packageType.charAt(0).toUpperCase() + packageType.slice(1)}! Your subscription is now active.
-            </p>
-            <p className="text-sm text-gray-500">
-              This window will close automatically...
-            </p>
-          </div>
-        )}
+                  <PaymentMethodSelector
+                    amount={getPackagePrice().toString()}
+                    subscriptionType={subscriptionType}
+                    contractId={contractId}
+                    productName={`${packageType.charAt(0).toUpperCase() + packageType.slice(1)} Subscription`}
+                    onPaymentSuccess={handlePaymentSuccess}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={onClose} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Complete */}
+            {currentStep === 5 && (
+              <div className="text-center py-12">
+                <div className="bg-slate-700/50 rounded-lg p-8">
+                  <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="h-12 w-12 text-white" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-white mb-4">
+                    Subscription Activated!
+                  </h3>
+                  <p className="text-slate-300 mb-2 text-lg">
+                    Welcome to {packageType.charAt(0).toUpperCase() + packageType.slice(1)}! Your subscription is now active.
+                  </p>
+                  <p className="text-slate-400 text-sm">
+                    This window will close automatically in a few seconds...
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </DialogContent>
     </Dialog>
   );
