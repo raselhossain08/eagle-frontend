@@ -192,27 +192,43 @@ export default function TechnologyPage() {
                   </ul>
 
                   <div className="pt-4 space-y-3">
-                    <Button 
-                      onClick={() => {
-                        // Create cart item from the package
-                        const cartItem = {
-                          id: 'quantitative-trading-script',
-                          name: 'Quantitative Trading Script',
-                          price: '47',
-                          description: 'Powerful algorithmic trading script with advanced features',
-                          type: "script-purchase"
-                        };
-                        
-                        // Save to localStorage
-                        localStorage.setItem('cart', JSON.stringify([cartItem]));
-                        
-                        // Navigate to checkout using Next.js router
-                        router.push('/checkout');
-                      }}
-                      className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-                    >
-                      Add to Basket - $47/month
-                    </Button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Button 
+                        onClick={() => {
+                          router.push('/scripts');
+                        }}
+                        variant="outline"
+                        className="w-full border-2 border-eagle-primary text-eagle-primary hover:bg-eagle-primary/10 bg-eagle-primary/5 font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
+                      >
+                        View All Scripts
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          try {
+                            // Create cart item from the package
+                            const cartItem = {
+                              id: 'quantitative-trading-script',
+                              name: 'Quantitative Trading Script',
+                              price: 47,
+                              originalPrice: 47,
+                              description: 'Powerful algorithmic trading script with advanced features',
+                              type: "script-purchase"
+                            };
+                            
+                            // Save to localStorage
+                            localStorage.setItem('cart', JSON.stringify([cartItem]));
+                            
+                            // Navigate to checkout using Next.js router
+                            router.push('/checkout');
+                          } catch (error) {
+                            console.error('Error in script purchase:', error);
+                          }
+                        }}
+                        className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                      >
+                        Add to Basket - $47/month
+                      </Button>
+                    </div>
                     <div className="text-center">
                       <p className="text-sm text-eagle-muted-foreground mb-2">
                         💎 Or get better value with:

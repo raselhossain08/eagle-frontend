@@ -21,6 +21,7 @@ export default function SignatureCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -48,6 +49,15 @@ export default function SignatureCanvas({
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, actualWidth, height);
 
+    // Restore signature if it exists
+    if (signatureData && !isEmpty) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, actualWidth, height);
+      };
+      img.src = signatureData;
+    }
+
     // Handle window resize for responsiveness
     const handleResize = () => {
       const newContainer = canvas.parentElement;
@@ -55,6 +65,13 @@ export default function SignatureCanvas({
       const newActualWidth = Math.min(newContainerWidth - 16, width);
       
       if (newActualWidth !== canvas.width) {
+        // Save current signature before resize
+        let currentSignature = null;
+        if (!isEmpty && canvas.width > 0 && canvas.height > 0) {
+          currentSignature = canvas.toDataURL("image/png");
+          setSignatureData(currentSignature);
+        }
+
         canvas.width = newActualWidth;
         canvas.height = height;
         
@@ -67,11 +84,16 @@ export default function SignatureCanvas({
           newCtx.lineJoin = "round";
           newCtx.fillStyle = "#ffffff";
           newCtx.fillRect(0, 0, newActualWidth, height);
+
+          // Restore signature after resize
+          if (currentSignature && !isEmpty) {
+            const img = new Image();
+            img.onload = () => {
+              newCtx.drawImage(img, 0, 0, newActualWidth, height);
+            };
+            img.src = currentSignature;
+          }
         }
-        
-        // Clear signature on resize
-        setIsEmpty(true);
-        onSignatureChange("");
       }
     };
 
@@ -80,7 +102,7 @@ export default function SignatureCanvas({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [width, height, onSignatureChange]);
+  }, [width, height, onSignatureChange, signatureData, isEmpty]);
 
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
@@ -148,6 +170,7 @@ export default function SignatureCanvas({
     const canvas = canvasRef.current;
     if (canvas && !isEmpty) {
       const dataURL = canvas.toDataURL("image/png");
+      setSignatureData(dataURL);
       onSignatureChange(dataURL);
     }
   };
@@ -162,6 +185,7 @@ export default function SignatureCanvas({
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     setIsEmpty(true);
+    setSignatureData(null);
     onSignatureChange("");
   };
 

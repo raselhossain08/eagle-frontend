@@ -25,6 +25,8 @@ import {
   signContract,
   updatePaymentStatus,
   getUserContracts,
+  createContractWithContact,
+  type CreateContractWithContactData,
 } from "@/lib/api/contracts";
 import { useAuth } from "@/context/authContext";
 import { mockUser } from "@/lib/data";
@@ -78,6 +80,13 @@ export default function CheckoutContent() {
       email: mockUser.email || "",
       phone: "",
       company: "",
+      country: "",
+      streetAddress: "",
+      flatSuiteUnit: "",
+      townCity: "",
+      stateCounty: "",
+      postcodeZip: "",
+      discordUsername: "",
     },
     contractAccepted: false,
     paymentMethod: "card",
@@ -667,10 +676,13 @@ export default function CheckoutContent() {
       return;
     }
 
-    if (!formData.contactInfo.name.trim() || !formData.contactInfo.email.trim()) {
+    if (!formData.contactInfo.name.trim() || !formData.contactInfo.email.trim() || 
+        !formData.contactInfo.country.trim() || !formData.contactInfo.streetAddress.trim() ||
+        !formData.contactInfo.townCity.trim() || !formData.contactInfo.stateCounty.trim() ||
+        !formData.contactInfo.postcodeZip.trim()) {
       toast({
         title: "Contact Information Required",
-        description: "Please provide your name and email address",
+        description: "Please fill in all required fields marked with *",
         variant: "destructive",
       });
       return;
@@ -678,101 +690,75 @@ export default function CheckoutContent() {
 
     setIsLoading(true);
     try {
-      console.log("🔵 Creating guest contract");
-      
-      // First, check if user already has contracts with this email
-      try {
-        const existingContractsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/contracts/public/my-contracts`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.contactInfo.email,
-          }),
-        });
-        
-        if (existingContractsResponse.ok) {
-          const existingData = await existingContractsResponse.json();
-          console.log("📋 Existing contracts for email:", existingData.data);
-          
-          // Check if any existing contract is active for the same product type
-          const productType = getProductType();
-          const activeContract = existingData.data?.find((contract: any) => {
-            const isActiveSubscription = contract.status === "completed" && 
-              contract.subscriptionEndDate && 
-              new Date(contract.subscriptionEndDate) > new Date();
-            const isSameProduct = contract.productType === productType;
-            return isActiveSubscription && isSameProduct;
-          });
-          
-          if (activeContract) {
-            toast({
-              title: "Active Subscription Found",
-              description: "You already have an active subscription for this product with this email address.",
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch (checkError) {
-        console.log("⚠️ Could not check existing contracts, proceeding...");
-      }
+      console.log("🔵 Creating guest contract with new API");
       
       const productType = getProductType();
       
-      // Use the guest contract creation API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/contracts/create-with-contact`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: formData.contactInfo.name,
+      // Prepare contract data for the new API
+      const contractData: CreateContractWithContactData = {
+        fullName: formData.contactInfo.name,
+        email: formData.contactInfo.email,
+        ...(formData.contactInfo.phone && formData.contactInfo.phone.trim() && { phone: formData.contactInfo.phone.trim() }),
+        country: formData.contactInfo.country,
+        streetAddress: formData.contactInfo.streetAddress,
+        ...(formData.contactInfo.flatSuiteUnit && formData.contactInfo.flatSuiteUnit.trim() && { flatSuiteUnit: formData.contactInfo.flatSuiteUnit.trim() }),
+        townCity: formData.contactInfo.townCity,
+        stateCounty: formData.contactInfo.stateCounty,
+        postcodeZip: formData.contactInfo.postcodeZip,
+        ...(formData.contactInfo.discordUsername && formData.contactInfo.discordUsername.trim() && { discordUsername: formData.contactInfo.discordUsername.trim() }),
+        signature: signatureData.signature,
+        productType,
+        subscriptionType: "monthly",
+        contractData: {
+          name: formData.contactInfo.name,
           email: formData.contactInfo.email,
-          phone: formData.contactInfo.phone || "",
+          date: new Date(),
           signature: signatureData.signature,
-          productType,
-          subscriptionType: "monthly",
-          amount: getTotalPrice(useMemberPrice),
-          contractData: {
-            name: formData.contactInfo.name,
-            email: formData.contactInfo.email,
-            date: new Date(),
-            signature: signatureData.signature,
-            price: getTotalPrice(useMemberPrice).toLocaleString(),
-            productName: cartItems[0]?.name || "Mentorship Package",
-          }
-        }),
-      });
+          price: getTotalPrice(useMemberPrice).toLocaleString(),
+          productName: cartItems[0]?.name || "Mentorship Package",
+        }
+      };
 
-      const data = await response.json();
+      const result = await createContractWithContact(contractData);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create guest contract");
-      }
-
-      console.log("✅ Guest contract created successfully:", data);
+      console.log("✅ Guest contract created successfully:", result);
       
       // Set contract ID from response
-      const newContractId = data.data.contractId || data.data.contract._id || data.contractId;
+      const newContractId = result.contractId;
       setContractId(newContractId);
       
       console.log("📝 Setting contractId:", newContractId);
       
       setCurrentStep(4); // Move to Payment step
 
+      // Show success message based on user creation status
+      let successMessage = "Contract signed successfully";
+      if (result.userCreationStatus === 'created_pending') {
+        successMessage += ". We've created an account for you and sent an activation email.";
+      } else if (result.userCreationStatus === 'updated_pending') {
+        successMessage += ". We've resent your account activation email.";
+      }
+
       toast({
-        title: "Contract Signed Successfully",
-        description: data.message || "You can now proceed with payment",
+        title: "Success",
+        description: successMessage,
       });
 
     } catch (error: any) {
       console.error("Guest contract creation error:", error);
       
+      // Handle validation errors
+      if (error.validationErrors && Array.isArray(error.validationErrors)) {
+        toast({
+          title: "Validation Error",
+          description: error.validationErrors.join(", "),
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Handle active subscription error for guest users
-      if (error.message === "You already have an active subscription for this product") {
+      if (error.hasActiveSubscription || error.message === "You already have an active subscription for this product") {
         toast({
           title: "Active Subscription Found",
           description:
@@ -1104,55 +1090,169 @@ export default function CheckoutContent() {
           {/* Step 3: Contact Info */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name" className="text-slate-300">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.contactInfo.name}
-                    onChange={(e) => updateContactInfo("name", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your full name"
-                  />
+              <h3 className="text-lg font-semibold text-white mb-4">Contact & Address Information</h3>
+              
+              {/* Personal Information */}
+              <div className="bg-slate-700/30 rounded-lg p-4 space-y-4">
+                <h4 className="text-md font-medium text-purple-300 mb-3">Personal Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name" className="text-slate-300">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.contactInfo.name}
+                      onChange={(e) => updateContactInfo("name", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-slate-300">
+                      Email Address *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.contactInfo.email}
+                      onChange={(e) => updateContactInfo("email", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone" className="text-slate-300">
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={formData.contactInfo.phone}
+                      onChange={(e) => updateContactInfo("phone", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="company" className="text-slate-300">
+                      Company (Optional)
+                    </Label>
+                    <Input
+                      id="company"
+                      value={formData.contactInfo.company}
+                      onChange={(e) => updateContactInfo("company", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your company name"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="email" className="text-slate-300">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.contactInfo.email}
-                    onChange={(e) => updateContactInfo("email", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your email"
-                  />
+              </div>
+
+              {/* Address Information */}
+              <div className="bg-slate-700/30 rounded-lg p-4 space-y-4">
+                <h4 className="text-md font-medium text-purple-300 mb-3">Address Information</h4>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="country" className="text-slate-300">
+                      Country *
+                    </Label>
+                    <Input
+                      id="country"
+                      value={formData.contactInfo.country}
+                      onChange={(e) => updateContactInfo("country", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your country"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="streetAddress" className="text-slate-300">
+                      Street Address *
+                    </Label>
+                    <Input
+                      id="streetAddress"
+                      value={formData.contactInfo.streetAddress}
+                      onChange={(e) => updateContactInfo("streetAddress", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your street address"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="flatSuiteUnit" className="text-slate-300">
+                      Flat, Suite, Unit, etc. (Optional)
+                    </Label>
+                    <Input
+                      id="flatSuiteUnit"
+                      value={formData.contactInfo.flatSuiteUnit}
+                      onChange={(e) => updateContactInfo("flatSuiteUnit", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Apartment, suite, unit, building, floor, etc."
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="townCity" className="text-slate-300">
+                        Town/City *
+                      </Label>
+                      <Input
+                        id="townCity"
+                        value={formData.contactInfo.townCity}
+                        onChange={(e) => updateContactInfo("townCity", e.target.value)}
+                        className="bg-slate-700 border-slate-600 text-white"
+                        placeholder="Enter your city"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="stateCounty" className="text-slate-300">
+                        State/County *
+                      </Label>
+                      <Input
+                        id="stateCounty"
+                        value={formData.contactInfo.stateCounty}
+                        onChange={(e) => updateContactInfo("stateCounty", e.target.value)}
+                        className="bg-slate-700 border-slate-600 text-white"
+                        placeholder="Enter your state or county"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="postcodeZip" className="text-slate-300">
+                      Postcode/Zip *
+                    </Label>
+                    <Input
+                      id="postcodeZip"
+                      value={formData.contactInfo.postcodeZip}
+                      onChange={(e) => updateContactInfo("postcodeZip", e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter your postal/zip code"
+                      required
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Additional Contact Information */}
+              <div className="bg-slate-700/30 rounded-lg p-4 space-y-4">
+                <h4 className="text-md font-medium text-purple-300 mb-3">Additional Information</h4>
                 <div>
-                  <Label htmlFor="phone" className="text-slate-300">
-                    Phone Number
+                  <Label htmlFor="discordUsername" className="text-slate-300">
+                    Discord Username
                   </Label>
                   <Input
-                    id="phone"
-                    value={formData.contactInfo.phone}
-                    onChange={(e) => updateContactInfo("phone", e.target.value)}
+                    id="discordUsername"
+                    value={formData.contactInfo.discordUsername}
+                    onChange={(e) => updateContactInfo("discordUsername", e.target.value)}
                     className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your Discord username (e.g., username#1234)"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="company" className="text-slate-300">
-                    Company (Optional)
-                  </Label>
-                  <Input
-                    id="company"
-                    value={formData.contactInfo.company}
-                    onChange={(e) => updateContactInfo("company", e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your company name"
-                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Optional: Provide your Discord username for community access and support
+                  </p>
                 </div>
               </div>
             </div>
@@ -1288,8 +1388,12 @@ export default function CheckoutContent() {
                     // Step 2: Sign Contract validation
                     disabled = !formData.contractAccepted || !signatureData.signature || (contractId === "" && isLoading);
                   } else if (currentStep === 3) {
-                    // Step 3: Contact Info validation
-                    disabled = !formData.contactInfo.name?.trim() || !formData.contactInfo.email?.trim();
+                    // Step 3: Contact Info validation - check all required fields
+                    const required = [
+                      'name', 'email', 'country', 'streetAddress', 
+                      'townCity', 'stateCounty', 'postcodeZip'
+                    ];
+                    disabled = required.some(field => !formData.contactInfo[field as keyof typeof formData.contactInfo]?.trim());
                     
                     // For guest users, we also need signature and contract acceptance from step 2
                     if (!user && contractId === "") {
@@ -1307,6 +1411,11 @@ export default function CheckoutContent() {
                     hasSignature: !!signatureData.signature,
                     contactName: formData.contactInfo.name,
                     contactEmail: formData.contactInfo.email,
+                    contactCountry: formData.contactInfo.country,
+                    contactStreetAddress: formData.contactInfo.streetAddress,
+                    contactTownCity: formData.contactInfo.townCity,
+                    contactStateCounty: formData.contactInfo.stateCounty,
+                    contactPostcodeZip: formData.contactInfo.postcodeZip,
                     isLoading,
                     contractId,
                     isGuestUser: !user,
