@@ -1347,15 +1347,16 @@ export default function CheckoutContent() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 1}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-            >
-              Previous
-            </Button>
+          <div className={`flex pt-6 ${currentStep === 1 ? 'justify-end' : 'justify-between'}`}>
+            {currentStep > 1 && (
+              <Button
+                variant="outline"
+                onClick={handlePrevious}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+              >
+                Previous
+              </Button>
+            )}
 
             {currentStep < 5 ? (
               <Button
