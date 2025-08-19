@@ -76,7 +76,7 @@ export default function PricingPage() {
             </Card>
 
             {/* Updated Infinity Plan Card on Pricing Page */}
-            <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/70 backdrop-blur-sm border-yellow-400/70 ring-2 ring-yellow-400 shadow-2xl shadow-yellow-500/30">
+            <Card className="infinity-card">
               <CardHeader>
                 <div className="flex items-center space-x-3 mb-2">
                   <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-lg flex items-center justify-center">

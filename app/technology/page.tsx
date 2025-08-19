@@ -231,7 +231,7 @@ export default function TechnologyPage() {
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-eagle-muted-foreground mb-2">
-                        💎 Or get better value with:
+                      Or get better value with:
                       </p>
                       <InfinityUpgradeButton
                         currentPackage="basic"

@@ -195,6 +195,18 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Custom Infinity Card Class */
+.infinity-card {
+  background: linear-gradient(to bottom right, 
+    rgba(30, 41, 59, 0.7), /* slate-800/70 */
+    rgba(15, 23, 42, 0.7)  /* slate-900/70 */
+  );
+  backdrop-filter: blur(4px); /* backdrop-blur-sm */
+  border: 1px solid rgba(251, 191, 36, 0.7); /* border-yellow-400/70 */
+  box-shadow: 0 0 0 2px rgb(251 191 36); /* ring-2 ring-yellow-400 */
+  box-shadow: 0 25px 50px -12px rgba(234, 179, 8, 0.3); /* shadow-2xl shadow-yellow-500/30 */
+}
+
 /* Enhanced animations */
 @keyframes fadeInUp {
   from {
