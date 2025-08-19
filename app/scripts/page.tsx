@@ -27,105 +27,94 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { getPricingInfo, formatPriceWithPeriod } from "@/lib/pricing-config";
 
-const TRADING_SCRIPTS = [
-  {
-    id: 'eagle-algo-contrarian',
-    name: 'Eagle Algo Contrarian',
-    price: 47,
-    category: 'Momentum',
-    description: 'Advanced momentum indicators with contrarian signals for market reversals',
-    features: [
-      'Advanced momentum analysis',
-      'Contrarian signal detection',
-      'Multi-timeframe compatibility',
-      'Risk management built-in'
-    ],
-    image: '/script-example-btc.png',
-    rating: 4.8,
-    downloads: '2.3k+'
-  },
-  {
-    id: 'swing-king',
-    name: 'Swing King',
-    price: 47,
-    category: 'Swing Trading',
-    description: 'Optimal swing trading setups with precise entry and exit points',
-    features: [
-      'Swing pattern recognition',
-      'Entry/exit optimization',
-      'Support/resistance levels',
-      'Trend confirmation signals'
-    ],
-    image: '/swing-king-meta-chart.png',
-    rating: 4.9,
-    downloads: '1.8k+'
-  },
-  {
-    id: 'momentum-scalper',
-    name: 'Momentum Scalper',
-    price: 47,
-    category: 'Scalping',
-    description: 'High-frequency scalping signals for quick profit opportunities',
-    features: [
-      'High-frequency signals',
-      'Quick profit targeting',
-      'Low latency execution',
-      'Real-time market scanning'
-    ],
-    image: '/script-example-hood.png',
-    rating: 4.7,
-    downloads: '3.1k+'
-  },
-  {
-    id: 'trend-master',
-    name: 'Trend Master Pro',
-    price: 47,
-    category: 'Trend Following',
-    description: 'Professional trend following system with dynamic position sizing',
-    features: [
-      'Trend identification',
-      'Dynamic position sizing',
-      'Breakout detection',
-      'Trailing stop management'
-    ],
-    image: '/script-example-msft.png',
-    rating: 4.6,
-    downloads: '1.5k+'
-  },
-  {
-    id: 'options-flow',
-    name: 'Options Flow Scanner',
-    price: 47,
-    category: 'Options',
-    description: 'Real-time options flow analysis and unusual activity detection',
-    features: [
-      'Options flow monitoring',
-      'Unusual activity alerts',
-      'Volume spike detection',
-      'Dark pool integration'
-    ],
-    image: '/contrarian-tsla-ibit-chart.png',
-    rating: 4.8,
-    downloads: '2.7k+'
-  },
-  {
-    id: 'crypto-beast',
-    name: 'Crypto Beast',
-    price: 47,
-    category: 'Cryptocurrency',
-    description: 'Specialized cryptocurrency trading signals with volatility management',
-    features: [
-      'Crypto-specific indicators',
-      'Volatility management',
-      '24/7 market coverage',
-      'DeFi protocol integration'
-    ],
-    image: '/script-example-btc.png',
-    rating: 4.5,
-    downloads: '2.9k+'
-  }
-];
+// const TRADING_SCRIPTS = [
+//   {
+//     id: 'eagle-algo-contrarian',
+//     name: 'Eagle Algo Contrarian',
+//     price: 47,
+//     category: 'Momentum',
+//     description: 'Advanced momentum indicators with contrarian signals for market reversals',
+//     features: [
+//       'Advanced momentum analysis',
+//       'Contrarian signal detection',
+//       'Multi-timeframe compatibility',
+//       'Risk management built-in'
+//     ],
+//     image: '/script-example-btc.png',
+//   },
+//   {
+//     id: 'swing-king',
+//     name: 'Swing King',
+//     price: 47,
+//     category: 'Swing Trading',
+//     description: 'Optimal swing trading setups with precise entry and exit points',
+//     features: [
+//       'Swing pattern recognition',
+//       'Entry/exit optimization',
+//       'Support/resistance levels',
+//       'Trend confirmation signals'
+//     ],
+//     image: '/swing-king-meta-chart.png',
+//   },
+//   {
+//     id: 'momentum-scalper',
+//     name: 'Momentum Scalper',
+//     price: 47,
+//     category: 'Scalping',
+//     description: 'High-frequency scalping signals for quick profit opportunities',
+//     features: [
+//       'High-frequency signals',
+//       'Quick profit targeting',
+//       'Low latency execution',
+//       'Real-time market scanning'
+//     ],
+//     image: '/script-example-hood.png',
+//   },
+//   {
+//     id: 'trend-master',
+//     name: 'Trend Master Pro',
+//     price: 47,
+//     category: 'Trend Following',
+//     description: 'Professional trend following system with dynamic position sizing',
+//     features: [
+//       'Trend identification',
+//       'Dynamic position sizing',
+//       'Breakout detection',
+//       'Trailing stop management'
+//     ],
+//     image: '/script-example-msft.png',
+//   },
+//   {
+//     id: 'options-flow',
+//     name: 'Options Flow Scanner',
+//     price: 47,
+//     category: 'Options',
+//     description: 'Real-time options flow analysis and unusual activity detection',
+//     features: [
+//       'Options flow monitoring',
+//       'Unusual activity alerts',
+//       'Volume spike detection',
+//       'Dark pool integration'
+//     ],
+//     image: '/contrarian-tsla-ibit-chart.png',
+//   },
+//   {
+//     id: 'crypto-beast',
+//     name: 'Crypto Beast',
+//     price: 47,
+//     category: 'Cryptocurrency',
+//     description: 'Specialized cryptocurrency trading signals with volatility management',
+//     features: [
+//       'Crypto-specific indicators',
+//       'Volatility management',
+//       '24/7 market coverage',
+//       'DeFi protocol integration'
+//     ],
+//     image: '/script-example-btc.png',
+//   }
+// ];
 
 const CATEGORIES = ['All', 'Momentum', 'Swing Trading', 'Scalping', 'Trend Following', 'Options', 'Cryptocurrency'];
 
@@ -134,9 +123,12 @@ export default function ScriptsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedScript, setSelectedScript] = useState<string | null>(null);
 
-  const filteredScripts = selectedCategory === 'All' 
-    ? TRADING_SCRIPTS 
-    : TRADING_SCRIPTS.filter(script => script.category === selectedCategory);
+  // Get actual Infinity pricing
+  const infinityPricing = getPricingInfo('infinity', 'monthly');
+
+  // const filteredScripts = selectedCategory === 'All' 
+  //   ? TRADING_SCRIPTS 
+  //   : TRADING_SCRIPTS.filter(script => script.category === selectedCategory);
 
   const handlePurchaseScript = (script: any) => {
     try {
@@ -181,29 +173,11 @@ export default function ScriptsPage() {
               </p>
             </div>
           </div>
-
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {CATEGORIES.map((category) => (
-              <Button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                variant={selectedCategory === category ? "default" : "outline"}
-                className={`${
-                  selectedCategory === category 
-                    ? "bg-eagle-primary hover:bg-eagle-primary/90 text-eagle-primary-foreground" 
-                    : "border-eagle-border text-eagle-muted-foreground hover:bg-eagle-secondary/20"
-                }`}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* Scripts Grid */}
-      <section className="py-8 px-4">
+      {/* <section className="py-8 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredScripts.map((script) => (
@@ -231,15 +205,6 @@ export default function ScriptsPage() {
                         {script.name}
                       </CardTitle>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="flex items-center">
-                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                          <span className="text-yellow-400 text-sm ml-1">
-                            {script.rating}
-                          </span>
-                        </div>
-                        <span className="text-eagle-muted-foreground text-sm">
-                          {script.downloads} downloads
-                        </span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -279,14 +244,6 @@ export default function ScriptsPage() {
                       <Download className="w-4 h-4 mr-2" />
                       Purchase Script
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full border-eagle-border text-eagle-muted-foreground hover:bg-eagle-secondary/20"
-                      onClick={() => setSelectedScript(selectedScript === script.id ? null : script.id)}
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      {selectedScript === script.id ? 'Hide' : 'View'} Demo
-                    </Button>
                   </div>
 
                   {selectedScript === script.id && (
@@ -321,7 +278,7 @@ export default function ScriptsPage() {
             </div>
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-16 px-4 bg-eagle-secondary/30">
@@ -338,8 +295,8 @@ export default function ScriptsPage() {
                 const cartItem = {
                   id: 'upgrade-infinity',
                   name: 'Infinity Package',
-                  price: 999,
-                  originalPrice: 999,
+                  price: infinityPricing.price,
+                  originalPrice: infinityPricing.originalPrice,
                   type: 'subscription-infinity',
                   description: 'Complete access to all trading tools and scripts',
                 };
@@ -347,9 +304,14 @@ export default function ScriptsPage() {
                 router.push('/checkout');
               }}
               size="lg"
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-eagle-primary-foreground font-semibold px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-eagle-primary-foreground font-semibold px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] w-auto"
             >
-              Get Infinity Package - $999/month
+              <div className="flex flex-col items-center">
+                <span>Get Infinity Access - {formatPriceWithPeriod(infinityPricing.price)}</span>
+                <span className="text-xs opacity-75 line-through">
+                  {formatPriceWithPeriod(infinityPricing.originalPrice)} • Save {infinityPricing.discount}
+                </span>
+              </div>
             </Button>
             <Link href="/technology">
               <Button

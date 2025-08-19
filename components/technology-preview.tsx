@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { PRICING_CONFIG, getPricingInfo } from "@/lib/pricing-config";
 
 export function TechnologyPreview() {
   const router = useRouter();
@@ -15,11 +16,12 @@ export function TechnologyPreview() {
 
   const handleGetInfinityAccess = () => {
     try {
+      const infinityPricing = getPricingInfo('infinity', 'monthly');
       const cartItem = {
         id: 'upgrade-infinity',
         name: 'Infinity Package',
-        price: 999,
-        originalPrice: 999,
+        price: infinityPricing.price,
+        originalPrice: infinityPricing.originalPrice,
         type: 'subscription-infinity',
         description: 'Complete access to all trading tools and scripts',
       };
@@ -197,7 +199,7 @@ export function TechnologyPreview() {
                     onClick={handleGetInfinityAccess}
                     className="w-full py-2 px-4 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50"
                   >
-                    Get Infinity Access
+                    Get Infinity Access - ${getPricingInfo('infinity', 'monthly').price}/month
                   </button>
                 </div>
               </div>

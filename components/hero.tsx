@@ -42,8 +42,8 @@ export function Hero() {
               </h1>
 
               <p className="text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-2xl">
-                Discover how our
-                <span>
+                Discover how our 
+                <span className="px-2">
                   <DisclosureTooltip
                     trigger="registered investment advisor"
                     content="Eagle Investors LLC is a registered investment advisor. Registration does not imply a certain level of skill or training. All investment advisory services are provided in accordance with applicable federal and state regulations."
