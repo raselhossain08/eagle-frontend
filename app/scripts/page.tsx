@@ -100,7 +100,7 @@ export default function ScriptsPage() {
     try {
       const cartItem = {
         id: script.id,
-        name: script.name,
+        name: 'Quantitative Trading Script',
         price: script.price,
         originalPrice: script.price,
         description: script.description,
