@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getPricingInfo, formatPriceWithPeriod } from "@/lib/pricing-config";
 
 interface UpgradeButtonProps {
   targetPackage: "diamond" | "infinity";
@@ -42,7 +43,7 @@ interface UpgradeButtonProps {
 const PACKAGE_INFO = {
   diamond: {
     name: "Diamond",
-    price: "$499",
+    price: formatPriceWithPeriod(getPricingInfo('diamond', 'monthly').price, 'monthly'),
     icon: Gem,
     color: "from-blue-500 to-blue-600",
     hoverColor: "from-blue-600 to-blue-700",
@@ -60,7 +61,7 @@ const PACKAGE_INFO = {
   },
   infinity: {
     name: "Infinity",
-    price: "$999",
+    price: formatPriceWithPeriod(getPricingInfo('infinity', 'monthly').price, 'monthly'),
     icon: InfinityIcon,
     color: "from-yellow-500 to-orange-500",
     hoverColor: "from-yellow-600 to-orange-600",

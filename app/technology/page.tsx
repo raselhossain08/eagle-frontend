@@ -37,9 +37,12 @@ import {
   DiamondUpgradeButton,
   InfinityUpgradeButton,
 } from "@/components/upgrade-button";
+import { getPricingInfo, formatPriceWithPeriod } from "@/lib/pricing-config";
 
 export default function TechnologyPage() {
   const router = useRouter();
+  const infinityPricing = getPricingInfo('infinity', 'monthly');
+  
   return (
     <div className="min-h-screen bg-eagle-background">
       <Header />
@@ -237,7 +240,7 @@ export default function TechnologyPage() {
                         currentPackage="basic"
                         size="lg"
                         variant="outline"
-                        customText="Purchase Infinity - Includes Scripts + More"
+                        customText={`Purchase Infinity - ${formatPriceWithPeriod(infinityPricing.price)} - Includes Scripts + More`}
                         className="w-full border-2 border-amber-500 text-amber-500 hover:bg-amber-500/20 bg-amber-500/5 font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
                       />
                     </div>
@@ -351,7 +354,7 @@ export default function TechnologyPage() {
                         currentPackage="basic"
                         size="lg"
                         variant="outline"
-                        customText="Purchase Infinity - Best Value"
+                        customText={`Purchase Infinity - ${formatPriceWithPeriod(infinityPricing.price)} - Best Value`}
                         className="w-full border-2 border-amber-500 text-amber-500 hover:bg-amber-500/20 bg-amber-500/5 font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
                       />
                     </div>
@@ -485,7 +488,7 @@ export default function TechnologyPage() {
                         currentPackage="basic"
                         size="lg"
                         variant="outline"
-                        customText="Get Infinity Access"
+                        customText={`Get Infinity Access - ${formatPriceWithPeriod(infinityPricing.price)}`}
                         className="w-full border-2 border-amber-500 text-amber-500 hover:bg-amber-500/20 bg-amber-500/5 font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
                       />
                     </div>
