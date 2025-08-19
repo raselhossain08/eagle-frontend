@@ -29,92 +29,58 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { getPricingInfo, formatPriceWithPeriod } from "@/lib/pricing-config";
 
-// const TRADING_SCRIPTS = [
-//   {
-//     id: 'eagle-algo-contrarian',
-//     name: 'Eagle Algo Contrarian',
-//     price: 47,
-//     category: 'Momentum',
-//     description: 'Advanced momentum indicators with contrarian signals for market reversals',
-//     features: [
-//       'Advanced momentum analysis',
-//       'Contrarian signal detection',
-//       'Multi-timeframe compatibility',
-//       'Risk management built-in'
-//     ],
-//     image: '/script-example-btc.png',
-//   },
-//   {
-//     id: 'swing-king',
-//     name: 'Swing King',
-//     price: 47,
-//     category: 'Swing Trading',
-//     description: 'Optimal swing trading setups with precise entry and exit points',
-//     features: [
-//       'Swing pattern recognition',
-//       'Entry/exit optimization',
-//       'Support/resistance levels',
-//       'Trend confirmation signals'
-//     ],
-//     image: '/swing-king-meta-chart.png',
-//   },
-//   {
-//     id: 'momentum-scalper',
-//     name: 'Momentum Scalper',
-//     price: 47,
-//     category: 'Scalping',
-//     description: 'High-frequency scalping signals for quick profit opportunities',
-//     features: [
-//       'High-frequency signals',
-//       'Quick profit targeting',
-//       'Low latency execution',
-//       'Real-time market scanning'
-//     ],
-//     image: '/script-example-hood.png',
-//   },
-//   {
-//     id: 'trend-master',
-//     name: 'Trend Master Pro',
-//     price: 47,
-//     category: 'Trend Following',
-//     description: 'Professional trend following system with dynamic position sizing',
-//     features: [
-//       'Trend identification',
-//       'Dynamic position sizing',
-//       'Breakout detection',
-//       'Trailing stop management'
-//     ],
-//     image: '/script-example-msft.png',
-//   },
-//   {
-//     id: 'options-flow',
-//     name: 'Options Flow Scanner',
-//     price: 47,
-//     category: 'Options',
-//     description: 'Real-time options flow analysis and unusual activity detection',
-//     features: [
-//       'Options flow monitoring',
-//       'Unusual activity alerts',
-//       'Volume spike detection',
-//       'Dark pool integration'
-//     ],
-//     image: '/contrarian-tsla-ibit-chart.png',
-//   },
-//   {
-//     id: 'crypto-beast',
-//     name: 'Crypto Beast',
-//     price: 47,
-//     category: 'Cryptocurrency',
-//     description: 'Specialized cryptocurrency trading signals with volatility management',
-//     features: [
-//       'Crypto-specific indicators',
-//       'Volatility management',
-//       '24/7 market coverage',
-//       'DeFi protocol integration'
-//     ],
-//     image: '/script-example-btc.png',
-//   }
-// ];
+const TRADING_SCRIPTS = [
+  {
+    id: 'eagle-algo-contrarian',
+    name: 'Eagle Algo Contrarian',
+    price: 47,
+    category: 'Momentum',
+    description: 'Advanced momentum indicators with contrarian signals for market reversals',
+    features: [
+      'Advanced momentum analysis',
+      'Contrarian signal detection',
+      'Multi-timeframe compatibility',
+      'Risk management built-in'
+    ],
+    image: '/script-example-btc.png',
+    rating: 4.8,
+    downloads: '2.3k+'
+  },
+  {
+    id: 'swing-king',
+    name: 'Swing King',
+    price: 47,
+    category: 'Swing Trading',
+    description: 'Optimal swing trading setups with precise entry and exit points',
+    features: [
+      'Swing pattern recognition',
+      'Entry/exit optimization',
+      'Support/resistance levels',
+      'Trend confirmation signals'
+    ],
+    image: '/swing-king-meta-chart.png',
+    rating: 4.9,
+    downloads: '1.8k+'
+  },
+  {
+    id: 'momentum-scalper',
+    name: 'Momentum Scalper',
+    price: 47,
+    category: 'Scalping',
+    description: 'High-frequency scalping signals for quick profit opportunities',
+    features: [
+      'High-frequency signals',
+      'Quick profit targeting',
+      'Low latency execution',
+      'Real-time market scanning'
+    ],
+    image: '/script-example-hood.png',
+    rating: 4.7,
+    downloads: '3.1k+'
+  },
+
+];
+
 
 const CATEGORIES = ['All', 'Momentum', 'Swing Trading', 'Scalping', 'Trend Following', 'Options', 'Cryptocurrency'];
 
@@ -176,11 +142,11 @@ export default function ScriptsPage() {
         </div>
       </section>
 
-      {/* Scripts Grid */}
-      {/* <section className="py-8 px-4">
+         {/* Scripts Grid */}
+      <section className="py-8 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredScripts.map((script) => (
+            {TRADING_SCRIPTS .map((script) => (
               <Card 
                 key={script.id}
                 className="bg-eagle-card border-eagle-border hover:border-eagle-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-eagle-primary/10 overflow-hidden"
@@ -204,17 +170,9 @@ export default function ScriptsPage() {
                       <CardTitle className="text-xl text-eagle-card-foreground mb-1">
                         {script.name}
                       </CardTitle>
-                      <div className="flex items-center gap-2 mb-2">
-                      </div>
+     
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-eagle-primary">
-                        ${script.price}
-                      </div>
-                      <div className="text-xs text-eagle-muted-foreground">
-                        per month
-                      </div>
-                    </div>
+    
                   </div>
                   <CardDescription className="text-eagle-muted-foreground">
                     {script.description}
@@ -242,8 +200,9 @@ export default function ScriptsPage() {
                       className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-eagle-primary-foreground font-semibold"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Purchase Script
+                      Add to Basket - ${script.price}/month
                     </Button>
+
                   </div>
 
                   {selectedScript === script.id && (
@@ -268,7 +227,7 @@ export default function ScriptsPage() {
             ))}
           </div>
 
-          {filteredScripts.length === 0 && (
+          {TRADING_SCRIPTS .length === 0 && (
             <div className="text-center py-12">
               <Code className="w-16 h-16 text-eagle-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl text-eagle-muted-foreground mb-2">No scripts found</h3>
@@ -278,7 +237,7 @@ export default function ScriptsPage() {
             </div>
           )}
         </div>
-      </section> */}
+      </section>
 
       {/* CTA Section */}
       <section className="py-16 px-4 bg-eagle-secondary/30">
