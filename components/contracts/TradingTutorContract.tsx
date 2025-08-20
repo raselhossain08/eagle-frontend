@@ -54,13 +54,13 @@ export const TradingTutorContract: React.FC<TradingTutorContractProps> = ({
       <div className="border-b border-slate-600 pb-4">
         <h2 className="section-title font-medium mb-2">3. Fee Schedule</h2>
         <p className="indent">
-          Total Fee: $987 (Includes $786 for 3 hours of 1-on-1 tutoring + $201 value for 3-month Diamond access)
+          Total Fee: $987 (Includes {price} for 3 hours of 1-on-1 tutoring + $201 value for 3-month Diamond access)
         </p>
         <p className="indent mt-2">
-          Member Discounted Price: $786 (applies only to current Diamond subscribers)
+          Member Discounted Price: {price} (applies only to current Diamond subscribers)
         </p>
         <p className="indent mt-2">
-          Hourly Breakdown: $786 ÷ 3 hours = $262/hour
+          Hourly Breakdown: {price} ÷ 3 hours = ${Math.round(parseFloat(price.replace(/[^0-9.]/g, '')) / 3)}/hour
         </p>
         <p className="indent mt-2">
           Fees are billed via Stripe or PayPal through a secure checkout process on <a href="https://eagle-investors.com" className="underline text-blue-600">https://eagle-investors.com</a>.

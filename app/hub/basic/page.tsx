@@ -64,24 +64,68 @@ export default function BasicPage() {
     }
   };
 
+  // Eagle Brand Color Palette with Enhanced Unique Names
+  const eagleColorSystem = {
+    // Primary Brand Colors
+    primaryBlue: "text-brand-primary", // #58A6FF
+    accentCyan: "text-brand-cyan", // #39D3D7  
+    successGreen: "text-brand-green", // #3FB950
+    dangerRed: "text-brand-red", // #F85149
+    
+    // Background System
+    canvasMain: "bg-brand-bg-dark", // #0D1117
+    surfaceCard: "bg-brand-bg-light", // #161B22
+    dividerLine: "border-brand-border", // #30363D
+    
+    // New Eagle Theme Colors
+    canvasWhite: "bg-eagle-canvas",
+    charcoalText: "text-eagle-charcoal", 
+    actionSlate: "bg-eagle-action",
+    quietGray: "bg-eagle-quiet",
+    highlightAccent: "bg-eagle-highlight",
+    
+    // Chart Colors with Unique Names
+    chartOrange: "text-eagle-chart-orange",
+    chartTeal: "text-eagle-chart-teal",
+    chartBlue: "text-eagle-chart-blue",
+    chartYellow: "text-eagle-chart-yellow",
+    chartCoral: "text-eagle-chart-coral",
+  };
+
+  const eagleGlowSystem = {
+    cyanAura: "shadow-glow-cyan",
+    yellowRadiance: "shadow-glow-yellow", 
+    blueHalo: "shadow-glow-blue",
+    redGlow: "shadow-glow-red",
+  };
+
   const stats = [
     {
       label: "Platform Users",
       value: "155K+",
       icon: Users,
-      color: "text-brand-cyan",
+      color: eagleColorSystem.accentCyan,
+      bgColor: "bg-brand-cyan/10",
+      glowEffect: eagleGlowSystem.cyanAura,
+      chartColor: eagleColorSystem.chartTeal,
     },
     {
-      label: "Market Monitoring",
+      label: "Market Monitoring", 
       value: "24/7",
       icon: BarChart3,
-      color: "text-brand-green",
+      color: eagleColorSystem.successGreen,
+      bgColor: "bg-brand-green/10",
+      glowEffect: eagleGlowSystem.blueHalo,
+      chartColor: eagleColorSystem.chartBlue,
     },
     {
       label: "States Operating",
-      value: "50",
+      value: "50", 
       icon: TrendingUp,
-      color: "text-yellow-400",
+      color: eagleColorSystem.primaryBlue,
+      bgColor: "bg-brand-primary/10",
+      glowEffect: eagleGlowSystem.blueHalo,
+      chartColor: eagleColorSystem.chartOrange,
     },
   ];
 
@@ -110,48 +154,72 @@ export default function BasicPage() {
             services designed to help you navigate every market cycle.
           </p>
 
-          {/* Stats */}
+          {/* Enhanced Stats with New Eagle Color System */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 bg-brand-bg-dark/50 rounded-xl p-4 border border-brand-border/50"
+                className={cn(
+                  "flex items-center gap-3 rounded-xl p-4 border transition-all duration-300 hover:scale-105",
+                  eagleColorSystem.surfaceCard,
+                  eagleColorSystem.dividerLine,
+                  stat.bgColor,
+                  `hover:${stat.glowEffect}/20`
+                )}
               >
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-lg bg-brand-bg-light flex items-center justify-center",
+                    "w-10 h-10 rounded-lg flex items-center justify-center border relative",
+                    eagleColorSystem.canvasMain,
+                    eagleColorSystem.dividerLine,
                     stat.color
                   )}
                 >
                   <stat.icon className="w-5 h-5" />
+                  <div className={cn("absolute -top-1 -right-1 w-3 h-3 rounded-full", stat.chartColor.replace('text-', 'bg-'))}></div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-white">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+                  <div className={cn("text-sm", eagleColorSystem.charcoalText.replace('text-eagle-charcoal', 'text-gray-400'))}>
+                    {stat.label}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Enhanced Action Buttons with New Eagle Color System */}
           <div className="flex flex-wrap gap-4">
             <Link href="/hub/basic/ai-advisor">
-              <Button className="bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90 text-white font-bold px-6 py-3 shadow-glow-cyan transition-all duration-300 hover:scale-105 hover:shadow-glow-cyan/70 rounded-xl">
+              <Button className={cn(
+                "bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90 text-white font-bold px-6 py-3 transition-all duration-300 hover:scale-105 rounded-xl border border-brand-cyan/20",
+                eagleGlowSystem.cyanAura,
+                `hover:${eagleGlowSystem.cyanAura}/70`
+              )}>
                 <Bot className="w-5 h-5 mr-2" />
                 Access AI Advisor
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <Link href="/hub/basic/scripts">
-              <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold px-6 py-3 shadow-glow-yellow transition-all duration-300 hover:scale-105 hover:shadow-glow-yellow/70 rounded-xl">
+              <Button className={cn(
+                "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold px-6 py-3 transition-all duration-300 hover:scale-105 rounded-xl border border-yellow-400/30",
+                eagleGlowSystem.yellowRadiance,
+                `hover:${eagleGlowSystem.yellowRadiance}/70`
+              )}>
                 <Code className="w-5 h-5 mr-2" />
                 View Trading Scripts
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <Link href="/hub/basic/education">
-              <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold px-6 py-3 shadow-glow-blue transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] rounded-xl">
+              <Button className={cn(
+                "bg-gradient-to-r from-brand-green to-emerald-600 hover:from-brand-green/90 hover:to-emerald-700 text-white font-bold px-6 py-3 transition-all duration-300 hover:scale-105 rounded-xl border border-brand-green/30",
+                eagleGlowSystem.blueHalo,
+                "hover:shadow-[0_0_20px_rgba(63,185,80,0.4)]"
+              )}>
                 <GraduationCap className="w-5 h-5 mr-2" />
                 Access Education
                 <ArrowRight className="w-4 h-4 ml-2" />
