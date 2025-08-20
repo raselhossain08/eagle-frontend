@@ -24,6 +24,9 @@ import {
 import DiamondContract from "@/components/contracts/DiamondContract";
 import InfinityContract from "@/components/contracts/InfinityContract";
 import BasicContract from "@/components/contracts/BasicContract";
+import TradingTutorContract from "@/components/contracts/TradingTutorContract";
+import InvestmentAdvisingContract from "@/components/contracts/InvestmentAdvisingContract";
+import UltimateContract from "@/components/contracts/UltimateContract";
 import SignatureCanvas from "@/components/signature-canvas";
 
 interface SubscriptionContractModalProps {
@@ -73,6 +76,17 @@ function SubscriptionContractModal({
   onPaymentSuccess,
   upgradeMode = false,
 }: SubscriptionContractModalProps) {
+  // Helper function to get package price - Updated to match subscription page exactly
+  const getPackagePrice = () => {
+    const prices = {
+      diamond: subscriptionType === 'monthly' ? 76 : 760,
+      infinity: subscriptionType === 'monthly' ? 127 : 1270,
+      script: subscriptionType === 'monthly' ? 50 : 500,
+      basic: subscriptionType === 'monthly' ? 0 : 0
+    };
+    return prices[packageType as keyof typeof prices] || 76;
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
   const [signatureData, setSignatureData] = useState<SignatureData>({
     name: "",
@@ -89,23 +103,12 @@ function SubscriptionContractModal({
   });
   const [paymentData, setPaymentData] = useState<PaymentData>({
     paymentMethod: "stripe",
-    amount: subscriptionType === "yearly" ? 997 : 97,
+    amount: getPackagePrice(), // Use dynamic pricing based on package type
     subscriptionType,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [contractId, setContractId] = useState<string>("");
   const [existingContract, setExistingContract] = useState<any>(null);
-
-  // Helper function to get package price
-  const getPackagePrice = () => {
-    const prices = {
-      diamond: subscriptionType === 'monthly' ? 200 : 2000,
-      script: subscriptionType === 'monthly' ? 50 : 500,
-      infinity: subscriptionType === 'monthly' ? 100 : 1000,
-      basic: subscriptionType === 'monthly' ? 25 : 250
-    };
-    return prices[packageType as keyof typeof prices] || 97;
-  };
 
   const resetModal = () => {
     setCurrentStep(1);
@@ -260,7 +263,7 @@ function SubscriptionContractModal({
     const contractProps = {
       customerName: signatureData.name || "Customer Name",
       contractDate: new Date().toLocaleDateString(),
-      price: paymentData.amount.toString(),
+      price: `$${paymentData.amount.toString()}`,
     };
 
     switch (packageType.toLowerCase()) {
@@ -270,6 +273,14 @@ function SubscriptionContractModal({
         return <InfinityContract {...contractProps} />;
       case "basic":
         return <BasicContract {...contractProps} />;
+      case "trading-tutor":
+      case "trading-tutoring":
+        return <TradingTutorContract {...contractProps} />;
+      case "investment-advising":
+        return <InvestmentAdvisingContract {...contractProps} />;
+      case "eagle-ultimate":
+      case "ultimate":
+        return <UltimateContract {...contractProps} />;
       default:
         return <BasicContract {...contractProps} />;
     }

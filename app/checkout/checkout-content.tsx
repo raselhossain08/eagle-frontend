@@ -430,9 +430,22 @@ export default function CheckoutContent() {
     if (!firstItem) return false;
     
     return (
-      firstItem.id.includes("trading-tutor") || 
+      firstItem.id === "trading-tutor" ||
+      firstItem.name === "Trading Tutor" ||
       (firstItem.name && firstItem.name.toLowerCase().includes("trading tutor")) ||
       (firstItem.type && firstItem.type.toLowerCase().includes("trading tutor"))
+    );
+  };
+  
+  const isInvestmentAdvisingPackage = () => {
+    const firstItem = cartItems[0];
+    if (!firstItem) return false;
+    
+    return (
+      firstItem.id === "investment-advising" ||
+      firstItem.name === "Investment Advising" ||
+      (firstItem.name && firstItem.name.toLowerCase().includes("investment advising")) ||
+      (firstItem.type && firstItem.type.toLowerCase().includes("investment advising"))
     );
   };
   
@@ -441,8 +454,9 @@ export default function CheckoutContent() {
     if (!firstItem) return false;
     
     return (
-      firstItem.id.includes("ultimate") || 
-      (firstItem.name && firstItem.name.toLowerCase().includes("ultimate")) ||
+      firstItem.id === "eagle-ultimate" ||
+      firstItem.name === "Eagle Ultimate" ||
+      (firstItem.name && firstItem.name.toLowerCase().includes("eagle ultimate")) ||
       (firstItem.type && firstItem.type.toLowerCase().includes("ultimate"))
     );
   };
@@ -484,7 +498,16 @@ export default function CheckoutContent() {
       }
     }
 
-    // Handle specific mentorship packages first
+    // Handle specific mentorship packages by exact name matching
+    if (firstItem.name === "Eagle Ultimate") {
+      return "eagle-ultimate";
+    } else if (firstItem.name === "Investment Advising") {
+      return "investment-advising";
+    } else if (firstItem.name === "Trading Tutor") {
+      return "trading-tutor";
+    }
+
+    // Handle specific mentorship packages by ID
     if (firstItem.id === "eagle-ultimate") {
       return "eagle-ultimate";
     } else if (firstItem.id === "investment-advising") {
@@ -998,25 +1021,25 @@ export default function CheckoutContent() {
                       <InfinityContract {...contractProps} />
                     </div>
                   );
-                } else if (productType === "basic-subscription") {
+                } else if (isBasicPackage() || productType === "basic-subscription") {
                   return (
                     <div className="bg-slate-700/50 rounded-lg p-6 max-h-[400px] overflow-y-auto">
                       <BasicContract {...contractProps} />
                     </div>
                   );
-                } else if (productType === "trading-tutor") {
+                } else if (isTradingTutorPackage()) {
                   return (
                     <div className="bg-slate-700/50 rounded-lg p-6 max-h-[400px] overflow-y-auto">
                       <TradingTutorContract {...contractProps} />
                     </div>
                   );
-                } else if (productType === "eagle-ultimate") {
+                } else if (isUltimatePackage()) {
                   return (
                     <div className="bg-slate-700/50 rounded-lg p-6 max-h-[400px] overflow-y-auto">
                       <UltimateContract {...contractProps} />
                     </div>
                   );
-                } else if (productType === "investment-advising") {
+                } else if (isInvestmentAdvisingPackage()) {
                   return (
                     <div className="bg-slate-700/50 rounded-lg p-6 max-h-[400px] overflow-y-auto">
                       <InvestmentAdvisingContract {...contractProps} />

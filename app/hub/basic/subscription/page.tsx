@@ -75,12 +75,12 @@ const subscriptionTiers = [
   },
   {
     name: "Infinity",
-    monthlyPrice: "$99",
-    annualPrice: "$999",
-    originalMonthlyPrice: "$127",
-    originalAnnualPrice: "$1,270",
-    monthlySavings: "Save 22%",
-    annualSavings: "Save 21%",
+    monthlyPrice: "$127",
+    annualPrice: "$1,270",
+    originalMonthlyPrice: "$197",
+    originalAnnualPrice: "$2,244",
+    monthlySavings: "Save 32%",
+    annualSavings: "Save 43%",
     description: "Comprehensive investment service with educational tools*",
     icon: Infinity,
     iconBg: "bg-orange-500",
@@ -338,7 +338,7 @@ export default function SubscriptionPage() {
       <Separator className="bg-brand-border" />
 
       {/* Remove the entire Card with "Downgrade Subscription" content and replace with: */}
-      <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/50 shadow-glow-yellow">
+      <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/50 shadow-glow-yellow bg-transparent">
         <CardContent className="p-0">
           <a
             href="https://discord.gg/eagleinvestors"
@@ -408,6 +408,7 @@ export default function SubscriptionPage() {
       <SubscriptionContractModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        subscriptionType={isAnnual ? "yearly" : "monthly"}
         packageType={selectedPackage}
         onPaymentSuccess={handlePaymentSuccess}
       />

@@ -200,7 +200,7 @@ export default function ScriptsPage() {
                       className="w-full bg-gradient-to-r from-eagle-primary to-eagle-primary/80 hover:from-eagle-primary/90 hover:to-eagle-primary/70 text-eagle-primary-foreground font-semibold"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Add to Basket - ${script.price}/month
+                      Buy Scripts Package- ${script.price}/month
                     </Button>
 
                   </div>
