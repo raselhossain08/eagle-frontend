@@ -362,7 +362,7 @@ export default function BasicPage() {
 
       {/* FREE Discord Trial Access Section - Matching Subscription Page */}
       <div className="lg:col-span-3">
-        <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/50 shadow-glow-yellow">
+        <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/50 shadow-glow-yellow " style={{ backgroundColor: "transparent" }}>
           <CardContent className="p-0">
             <a
               href="https://discord.gg/eagleinvestors"
