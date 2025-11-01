@@ -5,7 +5,8 @@ import type {
   EducationContent,
   MarketIndex,
   MentorshipPackage,
-} from "./types";
+  AcademyCategory,
+} from "../types";
 
 // Mock user data. In a real app, this would come from your auth provider.
 // We'll set the user to 'Diamond' to showcase the upgrade prompts.
@@ -16,114 +17,132 @@ export const mockUser: User = {
   subscription: "Diamond",
 };
 
-export const subscriptionPlans: SubscriptionPlan[] = [
-  {
-    name: "Diamond",
-    price: "$49/mo",
-    features: [
-      "Basic Market Analysis",
-      "Standard Trading Tools",
-      "Community Forum Access",
-      "Email Support",
-    ],
-    isCurrent: mockUser.subscription === "Diamond",
-  },
-  {
-    name: "Infinity",
-    price: "$99/mo",
-    features: [
-      "All Diamond Features",
-      "Enhanced AI Advisor",
-      "Custom Trading Scripts",
-      "Full Education Library",
-      "Priority Support",
-    ],
-    isCurrent: mockUser.subscription === "Infinity",
-    isRecommended: true,
-  },
-];
+// Dynamic subscription plans - loaded from API
+export let subscriptionPlans: SubscriptionPlan[] = [];
 
-export const mentorshipPackages: MentorshipPackage[] = [
-  {
-    id: "eagle-ultimate",
-    name: "Eagle Ultimate",
-    description: "Comprehensive 8-hour mentorship program with premium access",
-    regularPrice: 2497,
-    memberPrice: 1827,
-    savings: 1164,
-    badge: "Most Comprehensive",
-    badgeColor: "orange",
-    icon: "👑",
-    iconBg: "bg-gradient-to-br from-yellow-500 to-orange-500",
-    borderColor: "border-yellow-500",
-    buttonColor:
-      "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
-    glowClass: "shadow-glow-yellow",
-    features: [
-      "8 Hours of 1on1 Sessions",
-      "1 Year Diamond ($1,164 value)",
-      "All Inclusive Package",
-      "8 Hours of Trading Tutor OR 8 Hours of Advising",
-      "Personalized strategy development",
-      "Complete portfolio review",
-      "Advanced risk management techniques",
-      "Long-term mentorship relationship",
-    ],
-  },
-  {
-    id: "investment-advising",
-    name: "Investment Advising",
-    description:
-      "Focus on long-term investment strategies and portfolio building",
-    regularPrice: 987,
-    memberPrice: 786,
-    savings: 201,
-    badge: null,
-    badgeColor: null,
-    icon: "📈",
-    iconBg: "bg-gradient-to-br from-brand-green to-green-600",
-    borderColor: "border-brand-green",
-    buttonColor:
-      "bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90",
-    glowClass: "shadow-glow-blue",
-    features: [
-      "3 Hours of 1on1 Sessions",
-      "3 Months Diamond",
-      "Setup Tax Advantaged Account",
-      "Learn How To Invest",
-      "Financial Plan Creation",
-      "Portfolio optimization strategies",
-      "Tax-efficient investing guidance",
-      "Retirement planning assistance",
-    ],
-  },
-  {
-    id: "trading-tutor",
-    name: "Trading Tutor",
-    description: "Master active trading strategies and market timing",
-    regularPrice: 987,
-    memberPrice: 786,
-    savings: 201,
-    badge: null,
-    badgeColor: null,
-    icon: "💎",
-    iconBg: "bg-gradient-to-br from-brand-primary to-purple-600",
-    borderColor: "border-brand-primary",
-    buttonColor:
-      "bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90",
-    glowClass: "shadow-glow-blue",
-    features: [
-      "3 Hours of 1on1 Sessions",
-      "3 Months Diamond",
-      "Learn to day trade/swing trade + options trade",
-      "Tune your trading strategy",
-      "Risk management for active trading",
-      "Technical analysis mastery",
-      "Entry and exit timing strategies",
-      "Psychology of trading",
-    ],
-  },
-];
+// Load plans from API
+import { getPublicPlans, formatPlanPrice } from '../services/api/plan';
+
+// Initialize subscription plans from API
+const initializeSubscriptionPlans = async () => {
+  try {
+    const apiPlans = await getPublicPlans();
+    subscriptionPlans = apiPlans
+      .filter(plan => plan.planType === 'subscription' && plan.isActive)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map(plan => ({
+        name: (plan.displayName === 'Diamond Plan' ? 'Diamond' : 
+               plan.displayName === 'Infinity Plan' ? 'Infinity' : 
+               'Diamond') as "Diamond" | "Infinity",
+        price: formatPlanPrice(plan, 'monthly'),
+        features: plan.features || [],
+        isCurrent: mockUser.subscription === plan.displayName,
+        isRecommended: plan.isPopular || false,
+      }));
+  } catch (error) {
+    console.error('Failed to load subscription plans:', error);
+    // Fallback to basic structure
+    subscriptionPlans = [
+      {
+        name: "Diamond",
+        price: "Contact for pricing",
+        features: ["Contact us for current features"],
+        isCurrent: false,
+      },
+      {
+        name: "Infinity", 
+        price: "Contact for pricing",
+        features: ["Contact us for current features"],
+        isCurrent: false,
+        isRecommended: true,
+      },
+    ];
+  }
+};
+
+// Initialize on module load
+initializeSubscriptionPlans();
+
+// Dynamic mentorship packages - loaded from API
+export let mentorshipPackages: MentorshipPackage[] = [];
+
+// Initialize mentorship packages from API
+const initializeMentorshipPackages = async () => {
+  try {
+    const apiPlans = await getPublicPlans();
+    const mentorshipPlans = apiPlans
+      .filter(plan => plan.planType === 'mentorship' && plan.isActive)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    
+    mentorshipPackages = mentorshipPlans.map(plan => {
+      const basePrice = (typeof plan.pricing?.oneTime === 'number' ? plan.pricing.oneTime : plan.pricing?.oneTime?.price) ||
+                       (typeof plan.pricing?.monthly === 'number' ? plan.pricing.monthly : plan.pricing?.monthly?.price) || 0;
+      
+      return {
+        id: plan._id,
+        name: plan.displayName || plan.name,
+        description: plan.description || "Professional mentorship package",
+        regularPrice: basePrice,
+        memberPrice: Math.round(basePrice * 0.8),
+        savings: Math.round(basePrice * 0.2),
+        badge: plan.isFeatured ? "Featured" : plan.isPopular ? "Popular" : null,
+      badgeColor: plan.isFeatured ? "orange" : "blue",
+      icon: "�",
+      iconBg: "bg-gradient-to-br from-brand-primary to-purple-600",
+      borderColor: "border-brand-primary",
+      buttonColor: "bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primary/90 hover:to-brand-cyan/90",
+      glowClass: "shadow-glow-blue",
+      features: plan.features || ["Contact us for current features"],
+      };
+    });
+    
+    // If no mentorship plans found, add fallback data
+    if (mentorshipPackages.length === 0) {
+      mentorshipPackages = [
+        {
+          id: "eagle-ultimate",
+          name: "Eagle Ultimate",
+          description: "Comprehensive mentorship program with premium access",
+          regularPrice: 2497,
+          memberPrice: 1827,
+          savings: 670,
+          badge: "Most Comprehensive",
+          badgeColor: "orange",
+          icon: "�",
+          iconBg: "bg-gradient-to-br from-yellow-500 to-orange-500",
+          borderColor: "border-yellow-500",
+          buttonColor: "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
+          glowClass: "shadow-glow-yellow",
+          features: ["Contact us for current features and pricing"],
+        }
+      ];
+    }
+  } catch (error) {
+    console.error('Failed to load mentorship packages:', error);
+    // Fallback mentorship packages
+    mentorshipPackages = [
+      {
+        id: "eagle-ultimate",
+        name: "Eagle Ultimate",
+        description: "Comprehensive mentorship program",
+        regularPrice: 2497,
+        memberPrice: 1827,
+        savings: 670,
+        badge: "Most Comprehensive",
+        badgeColor: "orange",
+        icon: "�",
+        iconBg: "bg-gradient-to-br from-yellow-500 to-orange-500",
+        borderColor: "border-yellow-500",
+        buttonColor: "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
+        glowClass: "shadow-glow-yellow",
+        features: ["Contact us for current features"],
+      }
+    ];
+  }
+};
+
+// Initialize on module load  
+initializeMentorshipPackages();
 
 export const tradingScripts: TradingScript[] = [
   {
@@ -266,7 +285,7 @@ export const watchlistItems = [
   },
 ];
 
-export const eagleAcademyCategories: import("./types").AcademyCategory[] = [
+export const eagleAcademyCategories: AcademyCategory[] = [
   {
     name: "Start Trading",
     videos: [

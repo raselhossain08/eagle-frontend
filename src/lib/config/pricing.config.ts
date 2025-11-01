@@ -1,15 +1,21 @@
-// Dynamic pricing configuration - now uses PlanService for real-time pricing
-import planService from '../services/core/plan.service';
+// Dynamic pricing configuration - now uses Plan API for real-time pricing
+import { getPublicPlans, formatPlanPrice, Plan } from '../services/api/plan';
 
 // Cache for pricing data to avoid repeated API calls
-let pricingCache: any[] | null = null;
+let pricingCache: Plan[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Helper functions for price formatting
-export const formatPrice = (price: number) => `$${price}`;
-export const formatPriceWithPeriod = (price: number, period: 'monthly' | 'annual' = 'monthly') => 
-  `$${price}/${period === 'monthly' ? 'month' : 'year'}`;
+export const formatPrice = (price: number | string) => {
+  if (typeof price === 'string') return price;
+  return `$${price}`;
+};
+
+export const formatPriceWithPeriod = (price: number | string, period: 'monthly' | 'annual' = 'monthly') => {
+  if (typeof price === 'string') return price;
+  return `$${price}/${period === 'monthly' ? 'month' : 'year'}`;
+};
 
 // Get dynamic pricing info for a specific plan and billing cycle
 export const getPricingInfo = async (planName: string, billing: 'monthly' | 'annual' = 'monthly') => {
@@ -17,36 +23,62 @@ export const getPricingInfo = async (planName: string, billing: 'monthly' | 'ann
     // Check cache
     const now = Date.now();
     if (pricingCache && (now - cacheTimestamp) < CACHE_DURATION) {
-      const plan = pricingCache.find((p: any) => 
-        p.name.toLowerCase() === planName.toLowerCase()
+      const plan = pricingCache.find((p: Plan) => 
+        p.name.toLowerCase() === planName.toLowerCase() || 
+        p.displayName?.toLowerCase() === planName.toLowerCase() ||
+        p.category.toLowerCase() === planName.toLowerCase()
       );
       if (plan) {
-        const pricingData = plan.pricing[billing];
+        let pricingData;
+        if (billing === 'monthly') {
+          pricingData = typeof plan.pricing?.monthly === 'number' ? 
+                       plan.pricing.monthly : 
+                       plan.pricing?.monthly?.price || 0;
+        } else {
+          pricingData = plan.pricing?.yearly || 
+                       (typeof plan.pricing?.annual === 'number' ? 
+                        plan.pricing.annual : 
+                        plan.pricing?.annual?.price) || 0;
+        }
+        
         return {
-          price: pricingData?.price || 0,
-          originalPrice: pricingData?.originalPrice || pricingData?.price || 0,
-          discount: pricingData?.discount || "0%",
-          savings: (pricingData?.originalPrice || 0) - (pricingData?.price || 0)
+          price: pricingData,
+          originalPrice: pricingData,
+          discount: "0%",
+          savings: 0
         };
       }
     }
 
-    // Fetch fresh data
-    const subscriptionPlans = await planService.getSubscriptionPlans();
-    pricingCache = subscriptionPlans;
+    // Fetch fresh data from API
+    const apiPlans = await getPublicPlans();
+    pricingCache = apiPlans;
     cacheTimestamp = now;
     
-    const plan = subscriptionPlans.find((p: any) => 
-      p.name.toLowerCase() === planName.toLowerCase()
+    const plan = apiPlans.find((p: Plan) => 
+      p.name.toLowerCase() === planName.toLowerCase() || 
+      p.displayName?.toLowerCase() === planName.toLowerCase() ||
+      p.category.toLowerCase() === planName.toLowerCase()
     );
     
     if (plan) {
-      const pricingData = plan.pricing[billing];
+      let pricingData;
+      if (billing === 'monthly') {
+        pricingData = typeof plan.pricing?.monthly === 'number' ? 
+                     plan.pricing.monthly : 
+                     plan.pricing?.monthly?.price || 0;
+      } else {
+        pricingData = plan.pricing?.yearly || 
+                     (typeof plan.pricing?.annual === 'number' ? 
+                      plan.pricing.annual : 
+                      plan.pricing?.annual?.price) || 0;
+      }
+      
       return {
-        price: pricingData?.price || 0,
-        originalPrice: pricingData?.originalPrice || pricingData?.price || 0,
-        discount: pricingData?.discount || "0%",
-        savings: (pricingData?.originalPrice || 0) - (pricingData?.price || 0)
+        price: pricingData,
+        originalPrice: pricingData,
+        discount: "0%",
+        savings: 0
       };
     }
     
@@ -60,6 +92,28 @@ export const getPricingInfo = async (planName: string, billing: 'monthly' | 'ann
       discount: "0%",
       savings: 0
     };
+  }
+};
+
+// Get all active subscription plans
+export const getSubscriptionPlans = async () => {
+  try {
+    const plans = await getPublicPlans();
+    return plans.filter(plan => plan.planType === 'subscription' && plan.isActive);
+  } catch (error) {
+    console.error('Error fetching subscription plans:', error);
+    return [];
+  }
+};
+
+// Get all active mentorship plans
+export const getMentorshipPlans = async () => {
+  try {
+    const plans = await getPublicPlans();
+    return plans.filter(plan => plan.planType === 'mentorship' && plan.isActive);
+  } catch (error) {
+    console.error('Error fetching mentorship plans:', error);
+    return [];
   }
 };
 

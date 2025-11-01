@@ -30,12 +30,19 @@ import { useAuth } from "@/context/authContext";
 // Get API base URL from environment
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Helper function to calculate cookie expiry based on subscription duration
+const getCookieExpiry = (duration: string): number => {
+  const durationConfig = SUBSCRIPTION_DURATIONS.find(d => d.value === duration);
+  return durationConfig ? durationConfig.days : 7; // Default to 7 days
+};
+
 // Smart API handler function
 const handleApiCall = async (
   endpoint: string,
   data: any,
   successMessage: string,
-  redirectPath: string = "/hub"
+  redirectPath: string = "/hub",
+  subscriptionDuration?: string
 ) => {
   if (!API_BASE_URL) {
     throw new Error("API configuration is missing");
@@ -65,13 +72,19 @@ const handleApiCall = async (
       throw new Error("Received invalid authentication token");
     }
 
-    // Store token securely
-    Cookies.set("token", token, {
-      expires: 7,
+    // Store token securely with dynamic expiry based on subscription
+    const expiry = subscriptionDuration 
+      ? getCookieExpiry(subscriptionDuration)
+      : (user?.cookieExpiry || 7); // Default to 7 days if not specified
+    
+    const cookieOptions = {
+      expires: expiry,
       path: "/",
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+      sameSite: "strict" as const,
+    };
+    
+    Cookies.set("token", token, cookieOptions);
 
     return { token, user, success: true };
   } catch (error) {
@@ -137,10 +150,47 @@ const registerSchema = z.object({
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters" }),
+  subscriptionType: z.string().default("basic"),
+  subscriptionDuration: z.string().default("1week"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
+
+// Admin configurable subscription plans and durations
+const SUBSCRIPTION_PLANS = [
+  {
+    id: "basic",
+    name: "Basic Plan",
+    price: "Free",
+    priceColor: "text-green-400",
+    features: ["Educational content", "Basic market insights", "Community forum access", "Email support"],
+    available: true
+  },
+  {
+    id: "diamond",
+    name: "Diamond Plan",
+    price: "$99/month",
+    priceColor: "text-blue-400",
+    features: ["All Basic features", "Advanced analytics", "Premium signals", "Priority support", "Personal advisor"],
+    available: true
+  },
+  {
+    id: "infinity",
+    name: "Infinity Plan",
+    price: "$199/month",
+    priceColor: "text-purple-400",
+    features: ["All Diamond features", "Unlimited access", "1-on-1 coaching", "VIP community", "Custom strategies"],
+    available: true
+  }
+];
+
+// Admin configurable subscription durations
+const SUBSCRIPTION_DURATIONS = [
+  { value: "1week", label: "1 Week", days: 7 },
+  { value: "1month", label: "1 Month", days: 30 },
+  // Additional durations can be added by admin through dashboard
+];
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -165,7 +215,14 @@ export default function LoginPage() {
     formState: { errors: registerErrors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "" },
+    defaultValues: { 
+      firstName: "", 
+      lastName: "", 
+      email: "", 
+      password: "",
+      subscriptionType: "basic",
+      subscriptionDuration: "1week"
+    },
   });
 
   const onLoginSubmit = async (data: LoginFormData) => {
@@ -174,7 +231,7 @@ export default function LoginPage() {
 
     try {
       const result = await handleApiCall(
-        "/auth/login",
+        "/login",
         data,
         "Login successful! Redirecting...",
         "/hub"
@@ -202,21 +259,29 @@ export default function LoginPage() {
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-    toast.loading("Creating account...", { duration: Infinity });
+    toast.loading("Creating account with 1-week Basic access...", { duration: Infinity });
+
+    // Add subscription data to registration - automatically set to basic 1 week
+    const registrationData = {
+      ...data,
+      subscriptionType: "basic",
+      subscriptionDuration: "1week",
+    };
 
     try {
       const result = await handleApiCall(
-        "/auth/register",
-        data,
-        "Registration successful! Redirecting...",
-        "/hub"
+        "/register",
+        registrationData,
+        "Registration successful! Basic subscription activated.",
+        "/hub",
+        "1week"
       );
 
       // Update auth context with token
       login(result.token);
 
       toast.dismiss();
-      toast.success("Registration successful! Redirecting...");
+      toast.success("Registration successful! 1-week Basic access activated. Redirecting...");
 
       // Small delay for better UX
       setTimeout(() => {
@@ -492,13 +557,19 @@ export default function LoginPage() {
             <div className="flex items-center space-x-2 mb-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span className="text-green-400 font-semibold">
-                Free Access Available!
+                Free 1-Week Access!
               </span>
             </div>
             <p className="text-gray-300 text-sm">
-              Create a free account to access basic educational content and get
-              started with your trading journey.
+              Create a free account and get 1 week of Basic plan access automatically. 
+              Start your trading journey with educational content and community support.
             </p>
+            <div className="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+              <span>✓ Educational Content</span>
+              <span>✓ Market Insights</span>
+              <span>✓ Community Access</span>
+              <span>✓ Email Support</span>
+            </div>
           </div>
         </div>
       </div>

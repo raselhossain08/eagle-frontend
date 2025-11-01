@@ -19,12 +19,16 @@ import {
   ArrowLeft,
   Settings,
   CreditCard,
+  AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   DowngradeToBasicButton,
   DowngradeToDiamondButton,
 } from "@/components/subscription/downgrade-button";
+import { SubscriptionStatusCard } from "@/components/subscription/subscription-status-card";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
+import { Subscription } from "@/lib/services/api/subscription";
 
 interface SubscriptionInfo {
   type: string;
@@ -42,6 +46,15 @@ export default function SubscriptionPage() {
   const { profile, loading } = useAuth();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<SubscriptionInfo[]>([]);
+  
+  // Get API subscription data
+  const { 
+    subscriptionStatus, 
+    userSubscriptions, 
+    loading: subscriptionLoading, 
+    error: subscriptionError,
+    refetch 
+  } = useSubscriptionStatus();
 
   useEffect(() => {
     if (!loading && !profile) {
@@ -49,9 +62,11 @@ export default function SubscriptionPage() {
       return;
     }
 
-    if (profile?.contracts) {
-      const activeSubscriptions: SubscriptionInfo[] = [];
+    // Process both contract-based and API-based subscriptions
+    const processedSubscriptions: SubscriptionInfo[] = [];
 
+    // Process contract-based subscriptions (existing logic)
+    if (profile?.contracts) {
       profile.contracts.forEach((contract) => {
         if (contract.status === "signed" && contract.subscriptionEndDate) {
           const endDate = new Date(contract.subscriptionEndDate);
@@ -82,7 +97,7 @@ export default function SubscriptionPage() {
               displayName = contract.productType || "Unknown Subscription";
           }
 
-          activeSubscriptions.push({
+          processedSubscriptions.push({
             type: "subscription",
             status,
             startDate: contract.subscriptionStartDate,
@@ -95,10 +110,60 @@ export default function SubscriptionPage() {
           });
         }
       });
-
-      setSubscriptions(activeSubscriptions);
     }
-  }, [profile, loading, router]);
+
+    // Process API-based subscriptions
+    if (userSubscriptions) {
+      const apiSubscriptions = [...userSubscriptions.active, ...userSubscriptions.inactive];
+      
+      apiSubscriptions.forEach((subscription: Subscription) => {
+        // Avoid duplicates by checking if we already have this subscription
+        const exists = processedSubscriptions.find(
+          sub => sub.contractId === subscription._id
+        );
+        
+        if (!exists) {
+          let displayName = "";
+          let icon = User;
+          let color = "bg-blue-500";
+
+          switch (subscription.planCategory?.toLowerCase()) {
+            case "diamond":
+              displayName = "Diamond Subscription";
+              icon = Crown;
+              color = "bg-purple-500";
+              break;
+            case "infinity":
+              displayName = "Infinity Subscription";
+              icon = Infinity;
+              color = "bg-blue-500";
+              break;
+            case "basic":
+              displayName = "Basic Subscription";
+              icon = User;
+              color = "bg-green-500";
+              break;
+            default:
+              displayName = subscription.planName || "Unknown Subscription";
+          }
+
+          processedSubscriptions.push({
+            type: "subscription",
+            status: subscription.status === "active" ? "active" : "expired",
+            startDate: subscription.startDate,
+            endDate: subscription.endDate || new Date().toISOString(),
+            productType: subscription.planCategory?.toLowerCase() || "unknown",
+            displayName,
+            icon,
+            color,
+            contractId: subscription._id,
+          });
+        }
+      });
+    }
+
+    setSubscriptions(processedSubscriptions);
+  }, [profile, loading, router, userSubscriptions]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -116,10 +181,67 @@ export default function SubscriptionPage() {
     return diffDays;
   };
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show error state if there's an API error (but still show contracts if available)
+  if (subscriptionError && !profile?.contracts?.length) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.back()}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                  Subscription Management
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                  Manage your active subscriptions and billing
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="space-y-4">
+                <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Unable to Load Subscriptions
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">
+                    {subscriptionError}
+                  </p>
+                </div>
+                <div className="flex gap-3 justify-center pt-4">
+                  <Button onClick={() => refetch()}>
+                    Try Again
+                  </Button>
+                  <Button variant="outline" onClick={() => router.push("/hub")}>
+                    Back to Hub
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -160,6 +282,17 @@ export default function SubscriptionPage() {
             </Button>
           </div>
         </div>
+
+        {/* Current Subscription Status from API */}
+        {subscriptionStatus && (
+          <div className="mb-6">
+            <SubscriptionStatusCard 
+              subscriptionStatus={subscriptionStatus}
+              onRefresh={refetch}
+              isRefreshing={subscriptionLoading}
+            />
+          </div>
+        )}
 
         {/* Subscriptions Grid */}
         {subscriptions.length > 0 ? (

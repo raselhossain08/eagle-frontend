@@ -5,7 +5,8 @@ import type {
   EducationContent,
   MarketIndex,
   MentorshipPackage,
-} from "./types";
+  AcademyCategory,
+} from "../types";
 
 // Mock user data. In a real app, this would come from your auth provider.
 // We'll set the user to 'Diamond' to showcase the upgrade prompts.
@@ -16,32 +17,51 @@ export const mockUser: User = {
   subscription: "Diamond",
 };
 
-export const subscriptionPlans: SubscriptionPlan[] = [
-  {
-    name: "Diamond",
-    price: "$49/mo",
-    features: [
-      "Basic Market Analysis",
-      "Standard Trading Tools",
-      "Community Forum Access",
-      "Email Support",
-    ],
-    isCurrent: mockUser.subscription === "Diamond",
-  },
-  {
-    name: "Infinity",
-    price: "$99/mo",
-    features: [
-      "All Diamond Features",
-      "Enhanced AI Advisor",
-      "Custom Trading Scripts",
-      "Full Education Library",
-      "Priority Support",
-    ],
-    isCurrent: mockUser.subscription === "Infinity",
-    isRecommended: true,
-  },
-];
+// Dynamic subscription plans - loaded from API
+export let subscriptionPlans: SubscriptionPlan[] = [];
+
+// Load plans from API
+import { getPublicPlans, formatPlanPrice } from '../services/api/plan';
+
+// Initialize subscription plans from API
+const initializeSubscriptionPlans = async () => {
+  try {
+    const apiPlans = await getPublicPlans();
+    subscriptionPlans = apiPlans
+      .filter(plan => plan.planType === 'subscription' && plan.isActive)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map(plan => ({
+        name: (plan.displayName === 'Diamond Plan' ? 'Diamond' : 
+               plan.displayName === 'Infinity Plan' ? 'Infinity' : 
+               'Diamond') as "Diamond" | "Infinity",
+        price: formatPlanPrice(plan, 'monthly'),
+        features: plan.features || [],
+        isCurrent: mockUser.subscription === plan.displayName,
+        isRecommended: plan.isPopular || false,
+      }));
+  } catch (error) {
+    console.error('Failed to load subscription plans:', error);
+    // Fallback to basic structure
+    subscriptionPlans = [
+      {
+        name: "Diamond",
+        price: "Contact for pricing",
+        features: ["Contact us for current features"],
+        isCurrent: false,
+      },
+      {
+        name: "Infinity", 
+        price: "Contact for pricing",
+        features: ["Contact us for current features"],
+        isCurrent: false,
+        isRecommended: true,
+      },
+    ];
+  }
+};
+
+// Initialize on module load
+initializeSubscriptionPlans();
 
 export const mentorshipPackages: MentorshipPackage[] = [
   {
@@ -266,7 +286,7 @@ export const watchlistItems = [
   },
 ];
 
-export const eagleAcademyCategories: import("./types").AcademyCategory[] = [
+export const eagleAcademyCategories: AcademyCategory[] = [
   {
     name: "Start Trading",
     videos: [

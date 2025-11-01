@@ -19,101 +19,36 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
+import { getPublicPlans, formatPlanPrice, Plan } from "@/lib/services/api/plan";
 import { updateSubscription } from "@/lib/services/api/subscription";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import toast from "react-hot-toast";
 import { SubscriptionContractModal } from "@/components/subscription/subscription-contract-modal";
 
-const subscriptionTiers = [
-  {
-    name: "Basic",
-    monthlyPrice: "Free",
-    annualPrice: "Free",
-    originalMonthlyPrice: null,
-    originalAnnualPrice: null,
-    monthlySavings: null,
-    annualSavings: null,
-    description: "Educational resources and basic market information",
-    icon: Zap,
-    iconBg: "bg-gray-600",
-    borderColor: "border-gray-600",
-    buttonColor: "bg-gray-600 hover:bg-gray-700",
-    buttonText: "Downgrade to Eagle Basic",
-    isPopular: false,
-    isPremium: false,
-    glowClass: "",
-    features: [
-      "Market education content",
-      "Chatroom for Free Users",
-      "Basic market updates",
-      "Email support",
-    ],
-  },
-  {
-    name: "Diamond",
-    monthlyPrice: "$76",
-    annualPrice: "$760",
-    originalMonthlyPrice: "$97",
-    originalAnnualPrice: "$1,164",
-    monthlySavings: "Save 21%",
-    annualSavings: "Save 35%",
-    description: "Investment services and educational resources*",
-    icon: Gem,
-    iconBg: "bg-blue-600",
-    borderColor: "border-brand-cyan",
-    buttonColor: "bg-brand-cyan hover:bg-brand-cyan/90",
-    buttonText: "Current Plan",
-    isPopular: true,
-    isPremium: false,
-    glowClass: "shadow-glow-cyan",
-    features: [
-      "Stock Trades Entry & Exit Alerts",
-      "AI Advisor",
-      "Option Day Trade Alerts",
-      "Option Swing Trades Alerts",
-      "24/7 Chat Room (Diamond Chat)",
-      "Daily Live Trading Stream (Every Market Day)",
-      "Investment Recommendations",
-      "Daily & Weekly Watchlists",
-      "Unusual Options Activity Cheat Sheet",
-      "AI Stock Breakouts",
-      "Analyst Grades & Insider Orders",
-      "Darkpool and Scalp Ideas",
-    ],
-  },
-  {
-    name: "Infinity",
-    monthlyPrice: "$127",
-    annualPrice: "$1,270",
-    originalMonthlyPrice: "$187",
-    originalAnnualPrice: "$2,244",
-    monthlySavings: "Save 32%",
-    annualSavings: "Save 43%",
-    description: "Comprehensive investment service with educational tools*",
-    icon: Infinity,
-    iconBg: "bg-orange-500",
-    borderColor: "border-yellow-500",
-    buttonColor:
-      "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
-    buttonText: "UPGRADE TO INFINITY NOW",
-    isPopular: false,
-    isPremium: true,
-    glowClass: "shadow-glow-yellow",
-    features: [
-      "All Diamond features",
-      "Advanced market screening (20-25 securities)",
-      "Professional Quant Trading Script Access*",
-      "Direct Infinity Advisory Tickets",
-      "Bi-weekly Eagle Portfolios Review Stream (Recorded)",
-      "Priority Challenge SMS Alerts",
-      "AI Advisor (Enhanced)",
-      "Complete education library",
-      "Custom analysis tools",
-      "VIP advisory support",
-    ],
-  },
-];
+// Dynamic subscription tiers interface
+interface SubscriptionTier {
+  name: string;
+  monthlyPrice: string;
+  annualPrice: string;
+  originalMonthlyPrice: string | null;
+  originalAnnualPrice: string | null;
+  monthlySavings: string | null;
+  annualSavings: string | null;
+  description: string;
+  icon: any;
+  iconBg: string;
+  borderColor: string;
+  buttonColor: string;
+  buttonText: string;
+  isPopular: boolean;
+  isPremium: boolean;
+  glowClass: string;
+  features: string[];
+}
+
+// Dynamic subscription tiers loaded from API
+let subscriptionTiers: SubscriptionTier[] = [];
 
 export default function SubscriptionPage() {
   const { profile, refreshProfile } = useAuth();
@@ -123,14 +58,89 @@ export default function SubscriptionPage() {
   const [selectedPackage, setSelectedPackage] = useState<
     "basic" | "diamond" | "infinity"
   >("diamond");
+  const [plansLoading, setPlansLoading] = useState(true);
 
-  if (!profile) {
+  // Initialize subscription tiers from API
+  useEffect(() => {
+    const initializeSubscriptionTiers = async () => {
+      try {
+        setPlansLoading(true);
+        const plans = await getPublicPlans();
+        const subscriptionPlans = plans.filter(plan => plan.planType === 'subscription' && plan.isActive)
+                                       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        
+        subscriptionTiers = subscriptionPlans.map((plan: Plan) => {
+          const isBasic = plan.category === 'basic';
+          const isDiamond = plan.category === 'diamond';
+          const isInfinity = plan.category === 'infinity';
+          
+          return {
+            name: plan.displayName || plan.name,
+            monthlyPrice: plan.pricing?.monthly?.price ? `$${plan.pricing.monthly.price}` : 
+                         plan.pricing?.monthly ? `$${plan.pricing.monthly}` : 'Free',
+            annualPrice: plan.pricing?.annual?.price ? `$${plan.pricing.annual.price}` : 
+                        plan.pricing?.yearly ? `$${plan.pricing.yearly}` : 'Free',
+            originalMonthlyPrice: plan.pricing?.monthly?.originalPrice ? `$${plan.pricing.monthly.originalPrice}` : null,
+            originalAnnualPrice: plan.pricing?.annual?.originalPrice ? `$${plan.pricing.annual.originalPrice}` : null,
+            monthlySavings: plan.pricing?.monthly?.savings ? `Save $${plan.pricing.monthly.savings}` : null,
+            annualSavings: plan.pricing?.annual?.savings ? `Save $${plan.pricing.annual.savings}` : null,
+            description: plan.description || "Professional investment service",
+            icon: isBasic ? Zap : isDiamond ? Gem : Infinity,
+            iconBg: isBasic ? "bg-gray-600" : isDiamond ? "bg-blue-600" : "bg-orange-500",
+            borderColor: isBasic ? "border-gray-600" : isDiamond ? "border-brand-cyan" : "border-yellow-500",
+            buttonColor: isBasic ? "bg-gray-600 hover:bg-gray-700" : 
+                         isDiamond ? "bg-brand-cyan hover:bg-brand-cyan/90" :
+                         "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
+            buttonText: isDiamond ? "Current Plan" : 
+                       isBasic ? "Downgrade to Basic" : 
+                       "UPGRADE NOW",
+            isPopular: plan.isPopular || false,
+            isPremium: isInfinity,
+            glowClass: isDiamond ? "shadow-glow-cyan" : isInfinity ? "shadow-glow-yellow" : "",
+            features: plan.features || [],
+          };
+        });
+      } catch (error) {
+        console.error('Failed to fetch subscription tiers:', error);
+        // Fallback static data
+        subscriptionTiers = [
+          {
+            name: "Diamond",
+            monthlyPrice: "Contact",
+            annualPrice: "Contact",
+            originalMonthlyPrice: null,
+            originalAnnualPrice: null,
+            monthlySavings: null,
+            annualSavings: null,
+            description: "Professional investment service",
+            icon: Gem,
+            iconBg: "bg-blue-600",
+            borderColor: "border-brand-cyan",
+            buttonColor: "bg-brand-cyan hover:bg-brand-cyan/90",
+            buttonText: "Current Plan",
+            isPopular: true,
+            isPremium: false,
+            glowClass: "shadow-glow-cyan",
+            features: ["Contact us for current features"],
+          }
+        ];
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    initializeSubscriptionTiers();
+  }, []);
+
+  if (!profile || plansLoading) {
     return (
       <div className="min-h-screen bg-brand-bg-dark flex items-center justify-center">
         <Card className="bg-brand-bg-light border-brand-border p-8 text-center">
           <div className="flex items-center gap-3 justify-center mb-4">
             <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />
-            <span className="text-white font-semibold">Loading...</span>
+            <span className="text-white font-semibold">
+              {!profile ? "Loading profile..." : "Loading subscription plans..."}
+            </span>
           </div>
         </Card>
       </div>
@@ -445,7 +455,7 @@ export default function SubscriptionPage() {
         onClose={() => setPaymentModalOpen(false)}
         packageType={selectedPackage}
         onPaymentSuccess={handlePaymentSuccess}
-        defaultSubscriptionType={isAnnual ? "yearly" : "monthly"}
+        subscriptionType={isAnnual ? "yearly" : "monthly"}
       />
     </div>
   );

@@ -8,17 +8,49 @@ export interface Plan {
   category: 'basic' | 'diamond' | 'infinity' | 'ultimate' | 'script' | 'custom';
   planType: 'subscription' | 'mentorship' | 'script' | 'addon';
   pricing: {
-    monthly?: number;
+    monthly?: {
+      price?: number;
+      originalPrice?: number;
+      discount?: string;
+      savings?: number;
+    };
+    annual?: {
+      price?: number;
+      originalPrice?: number;
+      discount?: string;
+      savings?: number;
+    };
+    oneTime?: {
+      price?: number;
+      originalPrice?: number;
+      memberPrice?: number;
+      savings?: number;
+    };
+    // Keep backward compatibility
     yearly?: number;
-    oneTime?: number;
     currency?: string;
   };
   features: string[];
+  advancedFeatures?: Array<{
+    name: string;
+    description?: string;
+    isExclusive?: boolean;
+  }>;
+  ui?: {
+    icon?: string;
+    gradient?: string;
+    color?: string;
+    badgeText?: string;
+    badgeColor?: string;
+  };
   description?: string;
   isActive: boolean;
   isFeatured?: boolean;
   isPopular?: boolean;
+  isRecommended?: boolean;
   sortOrder?: number;
+  accessLevel?: number;
+  tags?: string[];
   limits?: {
     maxUsers?: number;
     maxFeatures?: number;
@@ -373,9 +405,13 @@ export const planHasFeature = (plan: Plan, feature: string): boolean => {
  */
 export const comparePlans = (a: Plan, b: Plan, sortBy: 'price' | 'name' = 'price'): number => {
   if (sortBy === 'price') {
-    const priceA = a.pricing?.monthly || a.pricing?.yearly || a.pricing?.oneTime || 0;
-    const priceB = b.pricing?.monthly || b.pricing?.yearly || b.pricing?.oneTime || 0;
-    return priceA - priceB;
+    const priceA = (typeof a.pricing?.monthly === 'number' ? a.pricing.monthly : a.pricing?.monthly?.price) || 
+                   a.pricing?.yearly || 
+                   (typeof a.pricing?.oneTime === 'number' ? a.pricing.oneTime : a.pricing?.oneTime?.price) || 0;
+    const priceB = (typeof b.pricing?.monthly === 'number' ? b.pricing.monthly : b.pricing?.monthly?.price) || 
+                   b.pricing?.yearly || 
+                   (typeof b.pricing?.oneTime === 'number' ? b.pricing.oneTime : b.pricing?.oneTime?.price) || 0;
+    return (priceA as number) - (priceB as number);
   }
   
   if (sortBy === 'name') {
@@ -406,8 +442,10 @@ export const filterPlans = (plans: Plan[], filters: {
     if (filters.isPopular !== undefined && plan.isPopular !== filters.isPopular) return false;
     
     if (filters.priceRange) {
-      const price = plan.pricing?.monthly || plan.pricing?.yearly || plan.pricing?.oneTime || 0;
-      if (price < filters.priceRange.min || price > filters.priceRange.max) return false;
+      const price = (typeof plan.pricing?.monthly === 'number' ? plan.pricing.monthly : plan.pricing?.monthly?.price) || 
+                    plan.pricing?.yearly || 
+                    (typeof plan.pricing?.oneTime === 'number' ? plan.pricing.oneTime : plan.pricing?.oneTime?.price) || 0;
+      if ((price as number) < filters.priceRange.min || (price as number) > filters.priceRange.max) return false;
     }
     
     return true;

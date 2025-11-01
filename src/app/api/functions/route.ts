@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { functionName, params } = body;
 
-    // Get the token from request cookies
-    const token = request.cookies.get('token')?.value;
+    // Get the token from request cookies (try AdminToken first, then token for backward compatibility)
+    const token = request.cookies.get('AdminToken')?.value || request.cookies.get('token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the token from request cookies
-    const token = request.cookies.get('token')?.value;
+    // Get the token from request cookies (try AdminToken first, then token for backward compatibility)
+    const token = request.cookies.get('AdminToken')?.value || request.cookies.get('token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });

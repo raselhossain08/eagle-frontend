@@ -12,11 +12,18 @@ import {
   Lock,
   Users,
   UserCheck,
+  User as UserIcon,
+  Diamond,
 } from "lucide-react";
 import type { User } from "@/lib/types";
 
 const navigation = [
   { name: "Hub", href: "/hub/diamond", icon: LayoutDashboard },
+  {
+    name: "Profile",
+    href: "/hub/diamond/profile",
+    icon: UserIcon,
+  },
   {
     name: "Private Sessions",
     href: "/hub/diamond/private-sessions",

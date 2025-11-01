@@ -26,7 +26,7 @@ import {
 import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { PRICING_CONFIG, formatPriceWithPeriod, getPricingInfo } from "@/lib/config/pricing.config";
+import { formatPriceWithPeriod, getPricingInfo } from "@/lib/config/pricing.config";
 
 interface UpgradeButtonProps {
   targetPackage: "diamond" | "infinity";
@@ -43,7 +43,7 @@ interface UpgradeButtonProps {
 const PACKAGE_INFO = {
   diamond: {
     name: "Diamond",
-    price: formatPriceWithPeriod(PRICING_CONFIG.diamond.monthly.price, 'monthly'),
+    price: "Contact Us", // Will be loaded dynamically
     icon: Gem,
     color: "from-blue-500 to-blue-600",
     hoverColor: "from-blue-600 to-blue-700",
@@ -61,7 +61,7 @@ const PACKAGE_INFO = {
   },
   infinity: {
     name: "Infinity",
-    price: formatPriceWithPeriod(PRICING_CONFIG.infinity.monthly.price, 'monthly'),
+    price: "Contact Us", // Will be loaded dynamically
     icon: InfinityIcon,
     color: "from-yellow-500 to-orange-500",
     hoverColor: "from-yellow-600 to-orange-600",
@@ -102,8 +102,12 @@ export function UpgradeButton({
     const loadPricing = async () => {
       try {
         const pricing = await getPricingInfo(targetPackage, 'monthly');
-        const formattedPrice = formatPriceWithPeriod(pricing.price, 'monthly');
-        setDynamicPrice(formattedPrice);
+        if (pricing.price && pricing.price > 0) {
+          const formattedPrice = formatPriceWithPeriod(pricing.price, 'monthly');
+          setDynamicPrice(formattedPrice);
+        } else {
+          setDynamicPrice("Contact Us");
+        }
       } catch (error) {
         console.error('Error loading dynamic pricing:', error);
         // Keep the static price as fallback

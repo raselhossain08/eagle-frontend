@@ -5,8 +5,9 @@ export * from './api/contracts';
 export * from './api/functions';
 export * from './api/user';
 
-// Export core API client
+// Export core services
 export * from './core/api-client';
+export * from './core/subscriberProfile.service';
 
 // Re-export types for convenience
 export type {
@@ -30,3 +31,14 @@ export type {
   ApiResponse,
   PaginatedResponse,
 } from './core/api-client';
+
+export type {
+  SubscriberProfile,
+  PersonalInfo,
+  ContactInfo,
+  Employment,
+  FinancialProfile,
+  KycStatus,
+  ProfileCompletion,
+  IdentityDocument,
+} from './core/subscriberProfile.service';

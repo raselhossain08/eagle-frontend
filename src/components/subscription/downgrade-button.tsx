@@ -26,7 +26,9 @@ import {
 import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { scheduleDowngrade } from "@/lib/services/api/downgrade";
+import { useSubscriptionActions } from "@/hooks/use-subscription-actions";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
+import { SubscriptionType } from "@/lib/services/api/subscription";
 
 interface DowngradeButtonProps {
   currentSubscription: "diamond" | "infinity";
@@ -38,53 +40,40 @@ interface DowngradeButtonProps {
   disabled?: boolean;
 }
 
-const SUBSCRIPTION_INFO = {
-  basic: {
-    name: "Eagle Basic",
-    price: "Free",
-    icon: User,
-    color: "from-gray-500 to-gray-600",
-    badgeColor: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-    features: [
-      "Basic market alerts",
-      "Community Discord access",
-      "Limited AI advisor access",
-      "Basic educational content",
-    ],
-    description: "Essential tools for getting started",
-  },
-  diamond: {
-    name: "Eagle Diamond",
-    price: "$499/month",
-    icon: Crown,
-    color: "from-blue-500 to-blue-600",
-    badgeColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    features: [
-      "Enhanced AI Advisor",
-      "Premium Trading Scripts",
-      "Advanced Market Analysis",
-      "Priority Support",
-      "Exclusive Discord Access",
-      "Portfolio Management Tools",
-    ],
-    description: "Premium features and advanced trading tools",
-  },
-  infinity: {
-    name: "Eagle Infinity",
-    price: "$999/month",
-    icon: InfinityIcon,
-    color: "from-yellow-500 to-orange-500",
-    badgeColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    features: [
-      "Everything in Diamond",
-      "Personal AI Trading Assistant",
-      "1-on-1 Coaching Sessions",
-      "Custom Strategy Development",
-      "VIP Community Access",
-      "Unlimited Support",
-    ],
-    description: "The ultimate trading experience with personal guidance",
-  },
+// Helper function to get subscription info - this should come from API in real implementation
+const getDowngradeSubscriptionInfo = (subscriptionType: string) => {
+  // Basic fallback info - in production, this should come from API
+  const fallbackInfo: Record<string, any> = {
+    basic: {
+      name: "Eagle Basic",
+      price: "Free",
+      icon: User,
+      color: "from-gray-500 to-gray-600",
+      badgeColor: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      features: ["Basic features available"],
+      description: "Essential tools for getting started",
+    },
+    diamond: {
+      name: "Eagle Diamond",
+      price: "Contact Sales",
+      icon: Crown,
+      color: "from-blue-500 to-blue-600",
+      badgeColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      features: ["Premium features available"],
+      description: "Premium features and advanced trading tools",
+    },
+    infinity: {
+      name: "Eagle Infinity",
+      price: "Contact Sales",
+      icon: InfinityIcon,
+      color: "from-yellow-500 to-orange-500",
+      badgeColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+      features: ["All features available"],
+      description: "The ultimate trading experience with personal guidance",
+    },
+  };
+
+  return fallbackInfo[subscriptionType] || fallbackInfo.basic;
 };
 
 export function DowngradeButton({
@@ -97,12 +86,13 @@ export function DowngradeButton({
   disabled = false,
 }: DowngradeButtonProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
   const { profile, refreshProfile } = useAuth();
+  const { scheduleSubscriptionDowngrade, isLoading } = useSubscriptionActions();
+  const { subscriptionStatus, refetch } = useSubscriptionStatus();
 
-  const currentInfo = SUBSCRIPTION_INFO[currentSubscription];
-  const targetInfo = SUBSCRIPTION_INFO[targetSubscription];
+  const currentInfo = getDowngradeSubscriptionInfo(currentSubscription);
+  const targetInfo = getDowngradeSubscriptionInfo(targetSubscription);
 
   // Check if downgrade is valid
   const canDowngrade = () => {
@@ -117,10 +107,10 @@ export function DowngradeButton({
 
   // Get features that will be lost
   const getLostFeatures = () => {
-    const currentFeatures = currentInfo.features;
-    const targetFeatures = targetInfo.features;
+    const currentFeatures = currentInfo.features || [];
+    const targetFeatures = targetInfo.features || [];
     return currentFeatures.filter(
-      (feature) => !targetFeatures.includes(feature)
+      (feature: string) => !targetFeatures.includes(feature)
     );
   };
 
@@ -148,43 +138,25 @@ export function DowngradeButton({
   const handleDowngradeClick = async () => {
     if (!canDowngrade() || disabled) return;
 
-    setIsProcessing(true);
-
     try {
       // Convert target subscription to API format
-      const apiTargetSubscription =
+      const apiTargetSubscription: SubscriptionType =
         targetSubscription === "basic" ? "Basic" : "Diamond";
 
       // Call the API to schedule downgrade
-      const response = await scheduleDowngrade(
-        apiTargetSubscription,
-        contractId
-      );
+      const response = await scheduleSubscriptionDowngrade(apiTargetSubscription);
 
-      toast({
-        title: "Downgrade Scheduled Successfully",
-        description: response.message,
-        duration: 5000,
-      });
+      if (response?.success) {
+        setIsConfirmOpen(false);
 
-      setIsConfirmOpen(false);
-
-      // Refresh user profile to reflect changes
-      if (refreshProfile) {
-        await refreshProfile();
+        // Refresh user profile and subscription data to reflect changes
+        await Promise.all([
+          refreshProfile && refreshProfile(),
+          refetch()
+        ]);
       }
     } catch (error) {
       console.error("Downgrade error:", error);
-      toast({
-        title: "Downgrade Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "There was an error scheduling your downgrade. Please try again or contact support.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -236,7 +208,7 @@ export function DowngradeButton({
                   {currentInfo.price}
                 </div>
                 <ul className="text-sm space-y-1">
-                  {currentInfo.features.slice(0, 3).map((feature, index) => (
+                  {currentInfo.features?.slice(0, 3).map((feature: string, index: number) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-3 w-3 text-green-500" />
                       {feature}
@@ -265,7 +237,7 @@ export function DowngradeButton({
                   {targetInfo.price}
                 </div>
                 <ul className="text-sm space-y-1">
-                  {targetInfo.features.slice(0, 3).map((feature, index) => (
+                  {targetInfo.features?.slice(0, 3).map((feature: string, index: number) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-3 w-3 text-green-500" />
                       {feature}
@@ -292,7 +264,7 @@ export function DowngradeButton({
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {lostFeatures.map((feature, index) => (
+                  {lostFeatures.map((feature: string, index: number) => (
                     <li
                       key={index}
                       className="flex items-center gap-2 text-red-300"
@@ -355,10 +327,10 @@ export function DowngradeButton({
             </Button>
             <Button
               onClick={handleDowngradeClick}
-              disabled={isProcessing}
+              disabled={isLoading}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white"
             >
-              {isProcessing ? (
+              {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Scheduling...

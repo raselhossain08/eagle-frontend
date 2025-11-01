@@ -13,12 +13,18 @@ import {
   Users,
   UserCheck,
   Star,
+  User as UserIcon,
 } from "lucide-react";
-import type { User } from "@/lib/scriptType";
+import type { User } from "@/lib/types";
 import { DiscordIcon } from "@/components/icons/discord-icon";
 
 const navigation = [
   { name: "Hub", href: "/hub/script", icon: LayoutDashboard },
+  {
+    name: "Profile",
+    href: "/hub/script/profile",
+    icon: UserIcon,
+  },
   {
     name: "Private Sessions",
     href: "/hub/script/private-sessions",

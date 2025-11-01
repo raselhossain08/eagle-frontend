@@ -145,7 +145,7 @@ export interface APIResponse<T = any> {
 }
 
 class SubscriberProfileService {
-  private baseUrl = '/api/subscriber-profiles';
+  private baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/subscriber-profiles`;
 
   private async makeRequest<T = any>(
     endpoint: string,
@@ -181,20 +181,70 @@ class SubscriberProfileService {
 
   // Get user's own profile
   async getMyProfile(): Promise<APIResponse<SubscriberProfile>> {
-    return this.makeRequest('/me');
+    return this.makeRequest('/my-profile');
   }
 
   // Update user's own profile
   async updateMyProfile(data: Partial<SubscriberProfile>): Promise<APIResponse<SubscriberProfile>> {
-    return this.makeRequest('/me', {
+    return this.makeRequest('/my-profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
+  // Upload identity document with file
+  async uploadDocument(file: File, documentType: string, description?: string): Promise<APIResponse<any>> {
+    try {
+      const token = getCookie('token');
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('documentType', documentType);
+      if (description) formData.append('description', description);
+
+      const response = await fetch(`${this.baseUrl}/upload-document`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(errorData.message || `Upload failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { success: true, data: data.data || data };
+    } catch (error) {
+      console.error('Document upload error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Upload failed' 
+      };
+    }
+  }
+
+  // Get user's uploaded documents
+  async getMyDocuments(): Promise<APIResponse<any[]>> {
+    return this.makeRequest('/documents');
+  }
+
+  // Get secure document URL
+  async getDocumentUrl(documentId: string): Promise<APIResponse<{ url: string; expiresIn: number }>> {
+    return this.makeRequest(`/documents/${documentId}/url`);
+  }
+
+  // Delete uploaded document
+  async deleteDocument(documentId: string): Promise<APIResponse<any>> {
+    return this.makeRequest(`/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Add identity document to user's profile
   async addIdentityDocument(data: CreateIdentityDocumentData): Promise<APIResponse<SubscriberProfile>> {
-    return this.makeRequest('/me/documents', {
+    return this.makeRequest('/identity-documents', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -202,7 +252,7 @@ class SubscriberProfileService {
 
   // Complete KYC step
   async completeKycStep(step: string): Promise<APIResponse<SubscriberProfile>> {
-    return this.makeRequest('/me/kyc/complete-step', {
+    return this.makeRequest('/kyc/complete-step', {
       method: 'POST',
       body: JSON.stringify({ step }),
     });
@@ -210,7 +260,7 @@ class SubscriberProfileService {
 
   // Export user's profile data
   async exportMyProfile(): Promise<APIResponse<any>> {
-    return this.makeRequest('/me/export');
+    return this.makeRequest('/my-profile/export');
   }
 
   // Utility functions for UI formatting

@@ -12,11 +12,17 @@ import {
   Lock,
   Users,
   UserCheck,
+  User as UserIcon,
 } from "lucide-react";
-import type { User } from "@/lib/infinityTypes";
+import type { User } from "@/lib/types";
 
 const navigation = [
   { name: "Hub", href: "/hub/infinity/", icon: LayoutDashboard },
+  {
+    name: "Profile",
+    href: "/hub/infinity/profile",
+    icon: UserIcon,
+  },
   {
     name: "Private Sessions",
     href: "/hub/infinity/private-sessions",

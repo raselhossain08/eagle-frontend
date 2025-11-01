@@ -49,7 +49,7 @@ const createApiClient = (): AxiosInstance => {
             Cookies.remove('token');
             Cookies.remove('user');
             if (typeof window !== 'undefined') {
-              window.location.href = '/auth/login';
+              window.location.href = '/login';
             }
             break;
           case 403:

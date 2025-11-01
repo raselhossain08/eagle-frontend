@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,59 +12,60 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  updateSubscription,
-  getSubscriptionStatus,
-} from "@/lib/services/api/subscription";
 import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/use-toast";
-import toast_old from "react-hot-toast";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
+import { useSubscriptionActions } from "@/hooks/use-subscription-actions";
+import { SubscriptionType } from "@/lib/services/api/subscription";
 
 interface SubscriptionManagerProps {
-  currentSubscription: "None" | "Basic" | "Diamond" | "Infinity" | "Script";
+  currentSubscription: SubscriptionType;
 }
 
-const subscriptionInfo = {
-  None: {
-    color: "secondary",
-    description: "No subscription",
-    price: "Free",
-    originalPrice: null,
-  },
-  Basic: {
-    color: "default",
-    description: "Basic features",
-    price: "Free",
-    originalPrice: null,
-  },
-  Diamond: {
-    color: "default",
-    description: "Premium features",
-    price: "$76",
-    originalPrice: "$97",
-  },
-  Infinity: {
-    color: "default",
-    description: "All features + AI",
-    price: "$127",
-    originalPrice: "$187",
-  },
-  Script: {
-    color: "default",
-    description: "Script access",
-    price: "$47",
-    originalPrice: "$67",
-  },
+// Helper function to get subscription info from API data
+const getSubscriptionInfo = (subscription: string, subscriptionStatus: any) => {
+  // Default fallback values
+  const defaults: Record<string, any> = {
+    None: { color: "secondary", description: "No subscription", price: "Free" },
+    Basic: { color: "default", description: "Basic features", price: "Free" },
+    Diamond: { color: "default", description: "Premium features", price: "Contact Sales" },
+    Infinity: { color: "default", description: "All features + AI", price: "Contact Sales" },
+    Script: { color: "default", description: "Script access", price: "Contact Sales" },
+  };
+
+  const defaultInfo = defaults[subscription] || { color: "default", description: "Unknown subscription", price: "Contact Sales" };
+
+  // If we have API data, use it, otherwise fall back to defaults
+  if (subscriptionStatus?.subscriptionDetails) {
+    return {
+      color: subscriptionStatus.subscriptionDetails.status === 'active' ? "default" : "secondary",
+      description: subscriptionStatus.subscriptionDetails.planName || defaultInfo.description,
+      price: subscriptionStatus.subscriptionDetails.amount ? 
+        `${subscriptionStatus.subscriptionDetails.currency || '$'}${subscriptionStatus.subscriptionDetails.amount}` : 
+        defaultInfo.price,
+      billingCycle: subscriptionStatus.subscriptionDetails.billingCycle,
+    };
+  }
+
+  return defaultInfo;
 };
 
 export default function SubscriptionManager({
   currentSubscription,
 }: SubscriptionManagerProps) {
-  const [selectedSubscription, setSelectedSubscription] =
-    useState<string>(currentSubscription);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionType>(currentSubscription);
   const { refreshProfile } = useAuth();
   const router = useRouter();
+  const { subscriptionStatus, loading: statusLoading, refetch } = useSubscriptionStatus();
+  const { updateUserSubscription, isLoading } = useSubscriptionActions();
+
+  // Update selected subscription when current subscription changes
+  useEffect(() => {
+    setSelectedSubscription(currentSubscription);
+  }, [currentSubscription]);
+
+  // Get current subscription info from API
+  const currentSubInfo = getSubscriptionInfo(currentSubscription, subscriptionStatus);
 
   const handleSubscriptionPurchase = (subscriptionType: string) => {
     if (subscriptionType === currentSubscription) {
@@ -82,14 +83,13 @@ export default function SubscriptionManager({
       return;
     }
 
-    // Create cart item for paid subscriptions
-    const subInfo =
-      subscriptionInfo[subscriptionType as keyof typeof subscriptionInfo];
+    // Create cart item for paid subscriptions - use API data if available
+    const subInfo = getSubscriptionInfo(subscriptionType, subscriptionStatus);
     const subscriptionItem = {
       id: subscriptionType.toLowerCase(),
       name: `${subscriptionType} Monthly Subscription`,
-      price: subInfo.originalPrice || subInfo.price,
-      memberPrice: subInfo.price,
+      price: subInfo.price || "Contact Sales",
+      memberPrice: subInfo.price || "Contact Sales",
       quantity: 1,
       subscriptionType: "monthly",
       productType: subscriptionType.toLowerCase(),
@@ -116,38 +116,20 @@ export default function SubscriptionManager({
       return;
     }
 
-    setIsUpdating(true);
-
-    const loadingToast = toast({
-      title: "Updating subscription...",
-      description: "Please wait while we update your subscription.",
-    });
-
     try {
-      await updateSubscription(selectedSubscription as any);
+      const response = await updateUserSubscription(selectedSubscription);
+      
+      if (response?.success) {
+        // Refresh profile and subscription data
+        await Promise.all([refreshProfile(), refetch()]);
 
-      // Refresh profile to get updated subscription
-      await refreshProfile();
-
-      toast({
-        title: "Success!",
-        description: "Subscription updated successfully!",
-      });
-
-      // Small delay then reload to show new dashboard
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        // Small delay then reload to show new dashboard
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      console.error("Subscription update error:", errorMessage);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage,
-      });
-    } finally {
-      setIsUpdating(false);
+      console.error("Subscription update error:", error);
     }
   };
 
@@ -156,12 +138,12 @@ export default function SubscriptionManager({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Subscription Management
-          <Badge variant={subscriptionInfo[currentSubscription].color as any}>
+          <Badge variant={currentSubInfo.color as any}>
             {currentSubscription}
           </Badge>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {subscriptionInfo[currentSubscription].description}
+          {currentSubInfo.description}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -169,7 +151,7 @@ export default function SubscriptionManager({
           <label className="text-sm font-medium">Change Subscription</label>
           <Select
             value={selectedSubscription}
-            onValueChange={setSelectedSubscription}
+            onValueChange={(value) => setSelectedSubscription(value as SubscriptionType)}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select subscription" />
@@ -186,10 +168,10 @@ export default function SubscriptionManager({
 
         <Button
           onClick={handleUpdateSubscription}
-          disabled={isUpdating || selectedSubscription === currentSubscription}
+          disabled={isLoading || selectedSubscription === currentSubscription || statusLoading}
           className="w-full"
         >
-          {isUpdating ? "Updating..." : "Update Subscription"}
+          {isLoading ? "Updating..." : "Update Subscription"}
         </Button>
 
         <div className="text-xs text-muted-foreground">

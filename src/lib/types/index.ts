@@ -85,9 +85,13 @@ export type AcademyVideo = {
 };
 
 export type AcademyCategory = {
+  id?: string;
   name: string;
   videos: AcademyVideo[];
   isInfinity?: boolean;
+  isInfinityExclusive?: boolean;
+  description?: string;
+  icon?: string | any; // Allow both string and React component
 };
 export interface UserProfile {
   _id: string;
