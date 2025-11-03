@@ -13,6 +13,7 @@ import {
   Users,
   UserCheck,
   User as UserIcon,
+  CreditCard,
 } from "lucide-react";
 import type { User } from "@/lib/types";
 
@@ -47,6 +48,7 @@ const navigation = [
     tier: "Infinity",
   },
   { name: "Community", href: "/hub/infinity/community", icon: Users },
+  { name: "Billing & Invoices", href: "/hub/infinity/billing", icon: CreditCard },
   { name: "Subscription", href: "/hub/infinity/subscription", icon: Gem },
 ];
 

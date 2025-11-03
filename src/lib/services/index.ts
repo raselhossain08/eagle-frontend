@@ -2,8 +2,16 @@
 export * from './api/subscription';
 export * from './api/plan';
 export * from './api/contracts';
+export * from './api/contract-templates';
 export * from './api/functions';
 export * from './api/user';
+export * from './api/discount';
+export * from './api/discounts';
+export * from './api/notifications';
+export * from './api/billing';
+
+// Export analytics services
+export * from './analytics';
 
 // Export core services
 export * from './core/api-client';
@@ -42,3 +50,76 @@ export type {
   ProfileCompletion,
   IdentityDocument,
 } from './core/subscriberProfile.service';
+
+export type {
+  DiscountInfo,
+  DiscountCalculation,
+  DiscountUsageInfo,
+  DiscountVerificationRequest,
+  DiscountVerificationResponse,
+  PublicDiscountsResponse,
+} from './api/discount';
+
+export type {
+  Discount,
+  DiscountType,
+  SubscriptionTier,
+  DiscountStatus,
+  CreateDiscountRequest,
+  UpdateDiscountRequest,
+  DiscountFilters,
+  ValidateDiscountCodeRequest,
+  ValidateDiscountCodeResponse,
+  PreviewDiscountRequest,
+  PreviewDiscountResponse,
+  DiscountPreviewCalculation,
+} from './api/discounts';
+
+export type {
+  Alert,
+  AlertSeverity,
+  AlertCategory,
+  AlertStatus,
+  NotificationType,
+  CreateAlertRequest,
+  UpdateAlertRequest,
+  AlertFilters,
+  AcknowledgeAlertRequest,
+  ResolveAlertRequest,
+  AlertListResponse,
+  AlertStats,
+  BulkAlertOperation,
+  BulkAlertResult,
+  AlertPreferences,
+  NotificationEvent
+} from './api/notifications';
+
+export type {
+  AnalyticsEvent,
+  BatchAnalyticsEvents,
+  VisitorAnalytics,
+  EventTypeConfig,
+  AnalyticsResponse,
+} from './analytics';
+
+export type {
+  Invoice,
+  InvoiceItem,
+  BillingAddress,
+  CustomerLocation,
+  InvoiceTemplate,
+  Currency,
+  TaxJurisdiction,
+  CreateInvoiceRequest,
+  UpdateInvoiceRequest,
+  TaxCalculationRequest,
+  TaxCalculationResponse,
+  InvoiceHistoryResponse,
+  InvoiceFilters,
+} from './api/billing';
+
+// Export service instances for direct use
+export { discountService } from './api/discount';
+export { notificationService } from './api/notifications';
+export { analyticsService } from './analytics';
+export { billingService } from './api/billing';

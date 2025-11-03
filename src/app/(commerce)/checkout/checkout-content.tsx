@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { PaymentMethodSelector } from "@/components/payments/payment-method-selector";
 import SignatureCanvas from "@/components/contracts/signature-canvas";
+import DiscountSection from "@/components/checkout/discount-section";
 import { toast } from "@/hooks/use-toast";
 import {
   signContract,
@@ -69,6 +70,10 @@ export default function CheckoutContent() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [contractId, setContractId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Discount state
+  const [appliedDiscountAmount, setAppliedDiscountAmount] = useState(0);
+  const [discountedTotal, setDiscountedTotal] = useState(0);
   
   // Debug currentStep changes
   useEffect(() => {
@@ -273,7 +278,7 @@ export default function CheckoutContent() {
 
   const getTotalPrice = (useMemberPrice: boolean = false) => {
     console.log("💰 Calculating Price:", { useMemberPrice, cartItems });
-    return cartItems.reduce((total: number, item: CartItem) => {
+    const subtotal = cartItems.reduce((total: number, item: CartItem) => {
       let priceValue = useMemberPrice && item.memberPrice ? item.memberPrice : item.price;
       console.log("📊 Item Price Calculation:", { 
         itemName: item.name,
@@ -324,6 +329,9 @@ export default function CheckoutContent() {
       const quantity = item.quantity || 1;
       return total + priceValue * quantity;
     }, 0);
+
+    // Return discounted total if discount is applied, otherwise return subtotal
+    return discountedTotal > 0 ? discountedTotal : subtotal;
   };
 
   // Get original price (before discount) for display
@@ -390,6 +398,55 @@ export default function CheckoutContent() {
 
   const getTotalItems = () => {
     return cartItems.reduce((total: number, item: CartItem) => total + (item.quantity || 1), 0);
+  };
+
+  // Handle discount application
+  const handleDiscountApplied = (discountAmount: number, finalAmount: number) => {
+    setAppliedDiscountAmount(discountAmount);
+    setDiscountedTotal(finalAmount);
+  };
+
+  // Handle discount removal
+  const handleDiscountRemoved = () => {
+    setAppliedDiscountAmount(0);
+    setDiscountedTotal(0);
+  };
+
+  // Get subtotal before discount
+  const getSubtotal = (useMemberPrice: boolean = false) => {
+    return cartItems.reduce((total: number, item: CartItem) => {
+      let priceValue = useMemberPrice && item.memberPrice ? item.memberPrice : item.price;
+
+      // Parse current price first
+      let currentPrice = 0;
+      if (typeof item.price === "string") {
+        currentPrice = parseFloat(item.price.replace(/[$,]/g, ""));
+      } else if (typeof item.price === "number") {
+        currentPrice = item.price;
+      }
+
+      // Apply discount if original price exists
+      if (item.originalPrice && !useMemberPrice) {
+        // Parse original price
+        const originalPriceStr = String(item.originalPrice);
+        const originalPrice = parseFloat(originalPriceStr.replace(/[$,]/g, ""));
+        
+        // Use the discounted price if it's lower than original
+        priceValue = currentPrice < originalPrice ? currentPrice : originalPrice;
+      } else {
+        // Handle member price or regular pricing
+        if (typeof priceValue === "string") {
+          priceValue = parseFloat(priceValue.replace(/[$,]/g, ""));
+        } else if (typeof priceValue === "number") {
+          priceValue = priceValue;
+        } else {
+          priceValue = 0;
+        }
+      }
+
+      const quantity = item.quantity || 1;
+      return total + priceValue * quantity;
+    }, 0);
   };
 
   const isDiamondPackage = () => {
@@ -947,7 +1004,9 @@ export default function CheckoutContent() {
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-600">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300">Total:</span>
+                    <span className="text-slate-300">
+                      {appliedDiscountAmount > 0 ? 'Subtotal:' : 'Total:'}
+                    </span>
                     <div className="text-right">
                       {/* Show original price if discount exists */}
                       {hasDiscount() && (
@@ -963,11 +1022,11 @@ export default function CheckoutContent() {
                       {/* Show member price discount if applicable and no regular discount */}
                       {useMemberPrice && !hasDiscount() && (
                         <div className="text-sm text-slate-400 line-through">
-                          ${getTotalPrice(false).toLocaleString()}
+                          ${getSubtotal(false).toLocaleString()}
                         </div>
                       )}
-                      <span className="text-2xl font-bold text-white">
-                        ${getTotalPrice(useMemberPrice).toLocaleString()}
+                      <span className={`${appliedDiscountAmount > 0 ? 'text-lg' : 'text-2xl'} font-bold text-white`}>
+                        ${getSubtotal(useMemberPrice).toLocaleString()}
                         {useMemberPrice && !hasDiscount() && (
                           <Badge className="ml-2 bg-green-500/20 text-green-400">
                             Member Price
@@ -981,8 +1040,36 @@ export default function CheckoutContent() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Show discount line and final total if discount is applied */}
+                  {appliedDiscountAmount > 0 && (
+                    <>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-slate-300">Promo Discount:</span>
+                        <span className="text-green-400 font-medium">
+                          -${appliedDiscountAmount.toLocaleString()}
+                        </span>
+                      </div>
+                      <Separator className="my-2 bg-slate-600" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-semibold">Total:</span>
+                        <span className="text-2xl font-bold text-white">
+                          ${getTotalPrice(useMemberPrice).toLocaleString()}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
+
+              {/* Discount Section */}
+              <DiscountSection
+                orderAmount={getSubtotal(useMemberPrice)}
+                quantity={getTotalItems()}
+                onDiscountApplied={handleDiscountApplied}
+                onDiscountRemoved={handleDiscountRemoved}
+                className="mt-4"
+              />
             </div>
           )}
 

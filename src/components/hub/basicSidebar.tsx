@@ -13,6 +13,7 @@ import {
   Users,
   UserCheck,
   User as UserIcon,
+  CreditCard,
 } from "lucide-react";
 import type { User } from "@/lib/types";
 import { DiscordIcon } from "@/components/icons/discord-icon";
@@ -48,6 +49,7 @@ const navigation = [
     tier: "Infinity",
   },
   { name: "Community", href: "/hub/basic/community", icon: Users },
+  { name: "Billing & Invoices", href: "/hub/basic/billing", icon: CreditCard },
   { name: "Subscription", href: "/hub/basic/subscription", icon: Gem },
   {
     name: "Join Discord",
