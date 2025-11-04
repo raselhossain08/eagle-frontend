@@ -231,7 +231,7 @@ export default function LoginPage() {
 
     try {
       const result = await handleApiCall(
-        "/login",
+        "/auth/login",
         data,
         "Login successful! Redirecting...",
         "/hub"
@@ -270,7 +270,7 @@ export default function LoginPage() {
 
     try {
       const result = await handleApiCall(
-        "/register",
+        "/auth/register",
         registrationData,
         "Registration successful! Basic subscription activated.",
         "/hub",
